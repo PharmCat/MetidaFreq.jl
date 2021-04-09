@@ -7,14 +7,19 @@ module MetidaFreq
 
 #using StaticArrays
 #using AxisArrays
-using Tables, CategoricalArrays
+using Tables, CategoricalArrays, Distributions, Roots, StatsBase
+
+import HypothesisTests
 
 import MetidaBase: AbstractData, DataSet
+import HypothesisTests: ChisqTest, MultinomialLRTest, FisherExactTest
+import Base: ht_keyindex, size
 
-import Base.ht_keyindex
-
-export contab
+export contab, diffci
 
 include("contab.jl")
+include("confint.jl")
+include("metaprop.jl")
+include("hypothesistest.jl")
 
 end

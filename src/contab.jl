@@ -14,7 +14,7 @@ function contab(m::AbstractMatrix{Int};
     rownames::Union{Vector{String}, Nothing} = nothing,
     colnames::Union{Vector{String}, Nothing} = nothing,
     id::Dict = Dict())
-    ConTab(m, rown, coln, id)
+    ConTab(m, rownames, colnames, id)
 end
 
 """
@@ -29,8 +29,8 @@ function contab(data, row::Symbol, col::Symbol; sort::Union{Nothing, Symbol, Abs
         ci    = CartesianIndices(s[3:end])
         v     = Vector{ConTab}(undef, length(ci))
         ckeys = Vector{Vector}(undef, dimn)
-        for i = 3:length(s)
-            ckeys[i] = collect(keys(res[2][i]))
+        for i = 1:length(s)-2
+            ckeys[i] = collect(keys(res[2][2+i]))
         end
         for i = 1:length(ci)
             id = Dict{Symbol, promote_type(eltype.(ckeys)...)}()
@@ -64,7 +64,7 @@ function contab_(data::Tuple)
         for j in 1:length(k)
             push!(s, k[j][i])
         end
-        us = unique(s)
+        us = collect(s)
         for v = 1:length(us)
             dims[i][us[v]] = v
         end
@@ -74,4 +74,11 @@ function contab_(data::Tuple)
         m[map(getindex, dims, k[j])...] = d[k[j]]
     end
     m, dims
+end
+
+function Base.size(contab::ConTab)
+    size(contab.tab)
+end
+function Base.size(contab::ConTab, dim::Int)
+    size(contab.tab, dim)
 end
