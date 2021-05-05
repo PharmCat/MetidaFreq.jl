@@ -1,6 +1,6 @@
 
 struct MetaProp
-    data
+    data::Vector{ConTab}
     metric::Symbol
     y::Vector
     var::Vector

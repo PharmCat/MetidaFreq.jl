@@ -1,7 +1,7 @@
 
 # MetidaFreq.jl
 
-struct ConTab <: AbstractData
+struct ConTab <: AbstractIdData
     tab::Matrix{Int}
     rown::Union{Vector{String}, Nothing}
     coln::Union{Vector{String}, Nothing}

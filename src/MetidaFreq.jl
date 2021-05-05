@@ -11,11 +11,15 @@ using Tables, CategoricalArrays, Distributions, Roots, StatsBase
 
 import HypothesisTests
 
-import MetidaBase: AbstractData, DataSet
+import MetidaBase: AbstractData, AbstractIdData, DataSet, Proportion
 import HypothesisTests: ChisqTest, MultinomialLRTest, FisherExactTest
 import Base: ht_keyindex, size
 
-export contab, diffci
+export contab, diffci, confint
+
+export metaprop, metapropfixed, metaproprandom
+
+export ChisqTest, MultinomialLRTest, FisherExactTest
 
 include("contab.jl")
 include("confint.jl")
