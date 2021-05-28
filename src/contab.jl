@@ -65,12 +65,12 @@ function contab_(data::Tuple)
             push!(s, k[j][i])
         end
         us = collect(s)
-        for v = 1:length(us)
+        @inbounds for v = 1:length(us)
             dims[i][us[v]] = v
         end
     end
     m = zeros(Int, length.(dims)...)
-    for j in 1:length(k)
+    @inbounds for j in 1:length(k)
         m[map(getindex, dims, k[j])...] = d[k[j]]
     end
     m, dims

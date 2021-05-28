@@ -1,6 +1,6 @@
 using MetidaFreq
 using Test
-using DataFrames, CSV
+using DataFrames, CSV, CategoricalArrays
 
 path     = dirname(@__FILE__)
 io       = IOBuffer();
@@ -10,8 +10,9 @@ freqdat  = CSV.File(path*"/csv/freqdat.csv") |> DataFrame
 #dat.hine1989
 #dat.graves2010
 #dat.bourassa1996
-categorical!(freqdat, :row);
-categorical!(freqdat, :col);
+
+transform!(freqdat, :row => categorical, renamecols=false)
+transform!(freqdat, :col => categorical, renamecols=false)
 
 @testset "MetidaFreq.jl" begin
 
