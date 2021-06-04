@@ -15,6 +15,7 @@
 - `:mover`
 """
 function diffci(contab::ConTab; level = 0.95, method = :default)
+    if !(size(contab.tab, 1) == size(contab.tab, 2) == 2) throw(ArgumentError("CI only for 2 X 2 tables.")) end
     alpha    = 1 - level
     x1 = contab.tab[1,1]
     n1 = x1 + contab.tab[1,2]
@@ -51,6 +52,7 @@ end
 - `:mover`
 """
 function orci(contab::ConTab; level = 0.95, method = :default)
+    if !(size(contab.tab, 1) == size(contab.tab, 2) == 2) throw(ArgumentError("CI only for 2 X 2 tables.")) end
     alpha    = 1 - level
     x1 = contab.tab[1,1]
     n1 = x1 + contab.tab[1,2]
@@ -77,6 +79,7 @@ end
 - `:mover`
 """
 function rrci(contab::ConTab; level = 0.95, method = :default)
+    if !(size(contab.tab, 1) == size(contab.tab, 2) == 2) throw(ArgumentError("CI only for 2 X 2 tables.")) end
     alpha    = 1 - level
     x1 = contab.tab[1,1]
     n1 = x1 + contab.tab[1,2]
@@ -108,11 +111,9 @@ end
 - `:ac`
 - `:jeffrey`
 """
-function propci(contab::ConTab; level = 0.95, method = :default)
+function propci(x::Int, n::Int; level = 0.95, method = :default)
+    if  x > n throw(ArgumentError("x > n")) end
     alpha    = 1 - level
-    if size(contab, 2) > 2
-    end
-
     if method == :wilson || method == :default
         fx = ci_prop_wilson
     elseif method==:wilsoncc
@@ -136,19 +137,44 @@ function propci(contab::ConTab; level = 0.95, method = :default)
     else
         throw(ArgumentError("unknown method!"))
     end
+    fx(x, n, alpha)
+end
+function propci(contab::ConTab; level = 0.95, method = :default)
+    alpha    = 1 - level
+    if  size(contab.tab, 2) != 2 throw(ArgumentError("CI only for N X 2 tables.")) end
     if size(contab, 1) > 1
         v = Vector{Tuple{Float64, Float64}}(undef, size(contab, 1))
         for i = 1:size(contab, 1)
             x = contab.tab[i,1]
             n = x + contab.tab[i,2]
             println(x, " : ", n)
-            v[i] = fx(x, n, alpha)
+            v[i] = propci(x, n; level = level, method = method)
         end
         return Tuple(v)
     else
         x = contab.tab[1,1]
         n = x + contab.tab[1,2]
-        return fx(x, n, alpha)
+        return propci(x, n; level = level, method = method)
+    end
+end
+
+function mpropci(contab::ConTab; level = 0.95, method = :default)
+    alpha    = 1 - level
+    if  size(contab.tab, 2) <= 2 throw(ArgumentError("CI only for N X M tables where M > 2")) end
+
+    if method == :goodman || method == :default
+        fx = ci_prop_goodman
+    else
+        throw(ArgumentError("unknown method!"))
+    end
+    if size(contab, 1) > 1
+        v = Vector{Vector{Tuple{Float64, Float64}}}(undef, size(contab, 1))
+        for i = 1:size(contab, 1)
+            v[i] = fx(view(contab.tab, i, :), alpha)
+        end
+        return v
+    else
+        return fx(view(contab.tab, 1, :), alpha)
     end
 end
 
@@ -501,7 +527,7 @@ function ci_prop_blaker(x, n, alpha; atol::Float64 = 1E-8)
     fx(p) =  acceptbin(x, n, p) - alpha
     if n != 0
         lower = quantile(Beta(x, n-x+1), alpha/2)
-        lower = find_zero( fx, lower, atol=atol)
+        lower = find_zero(fx, lower, atol=atol)
     end
     if x != n
         upper = quantile(Beta(x+1, n-x), 1-alpha/2)
@@ -547,7 +573,7 @@ end
 function ci_prop_wald_cc(x::Int, n::Int, alpha::Real)
     p=x/n
     b = quantile(Normal(), 1-alpha/2)*sqrt(p*(1-p)/n)
-    cc = n / 2
+    cc = 0.5 / n
     return p-b-cc, p+b+cc
 end
 # Agresti-Coull
@@ -570,7 +596,7 @@ end
 # Goodman, L.A. (1965). On Simultaneous Confidence Intervals for Multinomial Proportions. Technometrics 7: 247-254.
 # https://blogs.sas.com/content/iml/2017/02/15/confidence-intervals-multinomial-proportions.html
 # https://rdrr.io/cran/CoinMinD/man/GM.html
-function ci_prop_goodman(v::Vector{T1}, alpha::T2) where T1 where T2
+function ci_prop_goodman(v, alpha::T2) where T2
     k   = length(v)
     s   = sum(v)
     p   = v ./ s

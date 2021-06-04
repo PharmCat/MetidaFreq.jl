@@ -1,11 +1,11 @@
 
 # MetidaFreq.jl
 
-struct ConTab <: AbstractIdData
-    tab::Matrix{Int}
-    rown::Union{Vector{String}, Nothing}
-    coln::Union{Vector{String}, Nothing}
-    id::Dict
+struct ConTab{T <: AbstractMatrix{Int}, R <: Union{Vector{String}, Nothing}, C <: Union{Vector{String}, Nothing}, ID <: Dict} <: AbstractIdData
+    tab::T
+    rown::R
+    coln::C
+    id::ID
 end
 
 """
@@ -14,9 +14,14 @@ function contab(m::AbstractMatrix{Int};
     rownames::Union{Vector{String}, Nothing} = nothing,
     colnames::Union{Vector{String}, Nothing} = nothing,
     id::Dict = Dict())
-    ConTab(m, rownames, colnames, id)
+    ConTab{typeof(m), typeof(rownames), typeof(colnames), typeof(id)}(m, rownames, colnames, id)
 end
-
+function contab(v::AbstractVector{Int};
+    rownames::Union{Vector{String}, Nothing} = nothing,
+    colnames::Union{Vector{String}, Nothing} = nothing,
+    id::Dict = Dict())
+    contab(permutedims(v); rownames = rownames, colnames = colnames, id = id)
+end
 """
 """
 function contab(data, row::Symbol, col::Symbol; sort::Union{Nothing, Symbol, AbstractVector{Symbol}} = nothing, id = nothing)
