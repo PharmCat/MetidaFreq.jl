@@ -563,3 +563,22 @@ end
 function ci_prop_jeffrey(x, n, alpha)
     (quantile(Beta(x + 1/2, n - x + 1/2), alpha/2), quantile(Beta(x + 1/2, n - x + 1/2), 1-alpha/2))
 end
+
+################################################################################
+# Goodman CI
+################################################################################
+# Goodman, L.A. (1965). On Simultaneous Confidence Intervals for Multinomial Proportions. Technometrics 7: 247-254.
+# https://blogs.sas.com/content/iml/2017/02/15/confidence-intervals-multinomial-proportions.html
+# https://rdrr.io/cran/CoinMinD/man/GM.html
+function ci_prop_goodman(v::Vector{T1}, alpha::T2) where T1 where T2
+    k   = length(v)
+    s   = sum(v)
+    p   = v ./ s
+    chi = quantile(Chisq(one(Int)), one(T2) - alpha/k)
+    ci  = Vector{Tuple{Float64, Float64}}(undef, k)
+    d   = 2 * (chi + s)
+     @inbounds @simd for i = 1:k
+        ci[i] = ( (chi + 2v[i] - sqrt(chi*chi + 4v[i]*chi*(1.0 - v[i]/s))) / d , (chi + 2v[i] + sqrt(chi*chi + 4v[i]*chi*(1.0 - v[i]/s))) / d )
+    end
+    ci
+end

@@ -39,3 +39,16 @@ transform!(freqdat, :col => categorical, renamecols=false)
     mpf = MetidaFreq.metaproprandom(mp; tau = :ho)
 
 end
+
+@testset "  Goodman CI" begin
+
+    ci = MetidaFreq.ci_prop_goodman([44,55,43,32,67,78], 0.05)
+    @test ci[1][1] ≈ 0.09468368035184335  atol=1E-6
+    @test ci[1][2] ≈ 0.1966412812730604  atol=1E-6
+    @test ci[6][1] ≈ 0.18692731624998904  atol=1E-6
+    @test ci[6][2] ≈ 0.3130119423857655  atol=1E-6
+
+    ci = MetidaFreq.ci_prop_goodman([91,49,37,43], 0.05)
+    @test collect(ci[1]) ≈ [0.3342024783268433, 0.4978332073846343]  atol=1E-6
+    @test collect(ci[3]) ≈ [0.11455134046157951, 0.24011208358778185]  atol=1E-6
+end
