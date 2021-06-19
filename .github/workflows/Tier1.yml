@@ -1,6 +1,5 @@
 name: Tier 1
 on:
-  workflow_dispatch
   push:
     branches:
       - master
