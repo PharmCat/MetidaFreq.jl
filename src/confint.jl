@@ -4,6 +4,7 @@
     diffci(contab::ConTab; level = 0.95, method = :default)
 
 * 'method'
+
 - `:mn`
 - `:wald`
 - `:waldcc`
@@ -99,6 +100,9 @@ function rrci(contab::ConTab; level = 0.95, method = :default)
 end
 
 """
+    propci(x::Int, n::Int; level = 0.95, method = :default)
+
+`method`:
 
 - `:wilson` | `:default` - Wilson's confidence interval (CI) for a single proportion (wilson score);
 - `:wilsoncc` - Wilson's CI with continuity correction (CC);
@@ -139,6 +143,9 @@ function propci(x::Int, n::Int; level = 0.95, method = :default)
     end
     fx(x, n, alpha)
 end
+"""
+    propci(contab::ConTab; level = 0.95, method = :default)
+"""
 function propci(contab::ConTab; level = 0.95, method = :default)
     alpha    = 1 - level
     if  size(contab.tab, 2) != 2 throw(ArgumentError("CI only for N X 2 tables.")) end
@@ -158,6 +165,23 @@ function propci(contab::ConTab; level = 0.95, method = :default)
     end
 end
 
+"""
+    propci(prop::Proportion; level = 0.95, method = :default)
+"""
+function propci(prop::Proportion; level = 0.95, method = :default)
+    propci(prop.x, prop.n; level = level, method = method)
+end
+
+"""
+    mpropci(contab::ConTab; level = 0.95, method = :default)
+
+Multinomial proportions confidence interval.
+
+`method`:
+
+- `goodman` | `default` Goodman, L.A. (1965). On Simultaneous Confidence Intervals for Multinomial Proportions. Technometrics 7: 247-254.
+
+"""
 function mpropci(contab::ConTab; level = 0.95, method = :default)
     alpha    = 1 - level
     if  size(contab.tab, 2) <= 2 throw(ArgumentError("CI only for N X M tables where M > 2")) end

@@ -48,7 +48,11 @@ end
 
 Inverce Variance method used by default.
 
-`weights`
+`weights`:
+
+- `:iv` | `:default`
+- `:mh`
+
 """
 function metapropfixed(mp; weights = :default)
     varwts    = 1 ./ mp.var
@@ -62,10 +66,9 @@ function metapropfixed(mp; weights = :default)
         elseif mp.metric == :rr
             wts    = mhwrr(mp.data)
         end
-    elseif weights == :peto
-
+    #elseif weights == :peto
     else
-
+        error("weights keyword unknown!")
     end
     k       = length(mp.y)
     var     = 1 / sum(varwts)
@@ -80,9 +83,10 @@ end
     metaproprandom(mp; tau = :default)
 
 tau - τ² calculation method:
-- :dl
-- :ho
-- :hm
+- `:dl` DerSimonian-Laird
+- `:ho`
+- `:hm` Hartung and Makambi
+- `:sj` Sidik and Jonkman
 
 """
 function metaproprandom(mp; tau = :default)
@@ -115,6 +119,11 @@ function metaproprandom(mp; tau = :default)
     MetaPropResult{:random}(mp, rwts, est, var, chisq, q, i², τ²)
 end
 
+"""
+    StatsBase.confint(mpr::MetaPropResult; level = 0.95)
+
+Confidence interval for pooled proportion.
+"""
 function StatsBase.confint(mpr::MetaPropResult; level = 0.95)
     alpha = 1 - level
     se = sqrt(mpr.var)
@@ -144,8 +153,8 @@ function mhwrr(data)
     wts
 end
 
-function petow(data)
-end
+#function petow(data)
+#end
 function contabdiff(contab; adj = 0)
     a = contab.tab[1,1] + adj
     b = contab.tab[1,2] + adj

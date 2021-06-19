@@ -61,6 +61,20 @@ transform!(freqdat, :col => categorical, renamecols=false)
     @test collect(ci)  ≈ [0.2893837310094326, 0.4774506923359312] atol=1E-6
     ci = MetidaFreq.propci(38, 100; level = 0.95, method = :jeffrey)
     @test collect(ci)  ≈ [0.2893837310094326, 0.4774506923359312] atol=1E-6
+
+    ############################################################################
+    # default = wilson, level = 0.95
+    ci = MetidaFreq.propci(MetidaFreq.Proportion(38, 100))
+    @test collect(ci)  ≈ [0.2909759925247873, 0.47790244704488943] atol=1E-6
+end
+
+@testset "  Proportion difference Confidence Intarvals               " begin
+end
+
+@testset "  Odd ratio Confidence Intarvals                           " begin
+end
+
+@testset "  Risk ratio Confidence Intarvals                          " begin
 end
 
 @testset "  Contab from tabular data                                 " begin
@@ -72,31 +86,36 @@ end
 end
 
 @testset "  Meta proportions                                         " begin
-
+    # Make DataSet
+    ############################################################################
     pf1 = MetidaFreq.contab([15 8; 5 14])
     pf2 = MetidaFreq.contab([45 72; 23 95])
     mds = MetidaFreq.DataSet([pf1, pf2])
+    ############################################################################
+
+    # Check all metrics
     mp = MetidaFreq.metaprop(mds, :rr)
     mp = MetidaFreq.metaprop(mds, :or)
     mp = MetidaFreq.metaprop(mds, :diff)
+
+    # Fixed effect MH (diff)
+    mp  = MetidaFreq.metaprop(mds, :diff)
     mpf = MetidaFreq.metapropfixed(mp; weights = :mh)
     @test mpf.est ≈ 0.2196889005445779 atol=1E-6
     @test mpf.var ≈ 0.0028728509817330943 atol=1E-6
     ci = confint(mpf; level = 0.95)
     @test collect(ci)  ≈ [0.1146368241999458, 0.32474097688921] atol=1E-6
 
+    # Fixed effect IV (diff)
+    mp  = MetidaFreq.metaprop(mds, :diff)
     mpf = MetidaFreq.metapropfixed(mp; weights = :iv)
+
+    # Check random effect tau (diff)
+    mp  = MetidaFreq.metaprop(mds, :diff)
     mpf = MetidaFreq.metaproprandom(mp; tau = :dl)
     mpf = MetidaFreq.metaproprandom(mp; tau = :ho)
     mpf = MetidaFreq.metaproprandom(mp; tau = :hm)
     mpf = MetidaFreq.metaproprandom(mp; tau = :sj)
-
-    pf1 = MetidaFreq.contab([15 8; 5 14])
-    pf2 = MetidaFreq.contab([45 72; 23 95])
-    mds = MetidaFreq.DataSet([pf1, pf2])
-    mp = MetidaFreq.metaprop(mds, :diff)
-    mpf = MetidaFreq.metapropfixed(mp; weights = :mh)
-    mpf = MetidaFreq.metaproprandom(mp; tau = :ho)
 
 end
 
