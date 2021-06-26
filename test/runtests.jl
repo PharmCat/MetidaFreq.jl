@@ -16,47 +16,47 @@ transform!(freqdat, :col => categorical, renamecols=false)
 
 @testset "  Proportion Confidence Intarvals                          " begin
     ct = MetidaFreq.contab([38, 62])
-    #Wald
+    # Wald
     ci = MetidaFreq.propci(ct; level = 0.95, method = :wald)
     @test collect(ci)  ≈ [0.28486600512143206, 0.47513399487856794] atol=1E-6
     ci = MetidaFreq.propci(38, 100; level = 0.95, method = :wald)
     @test collect(ci)  ≈ [0.28486600512143206, 0.47513399487856794] atol=1E-6
-    #Wald cc
+    # Wald cc
     ci = MetidaFreq.propci(ct; level = 0.95, method = :waldcc)
     @test collect(ci)  ≈ [0.27986600512143206, 0.48013399487856795] atol=1E-6
     ci = MetidaFreq.propci(38, 100; level = 0.95, method = :waldcc)
     @test collect(ci)  ≈ [0.27986600512143206, 0.48013399487856795] atol=1E-6
-    #Wilson
+    # Wilson
     ci = MetidaFreq.propci(ct; level = 0.95, method = :wilson)
     @test collect(ci)  ≈ [0.2909759925247873, 0.47790244704488943] atol=1E-6
     ci = MetidaFreq.propci(38, 100; level = 0.95, method = :wilson)
     @test collect(ci)  ≈ [0.2909759925247873, 0.47790244704488943] atol=1E-6
-    #Wilson cc - check
+    # Wilson cc - check
     ci = MetidaFreq.propci(ct; level = 0.95, method = :wilsoncc)
     @test collect(ci)  ≈ [0.28639471634406627, 0.48294114679105093] atol=1E-6
     ci = MetidaFreq.propci(38, 100; level = 0.95, method = :wilsoncc)
     @test collect(ci)  ≈ [0.28639471634406627, 0.48294114679105093] atol=1E-6
-    #Clopper-Pirson
+    # Clopper-Pirson
     ci = MetidaFreq.propci(ct; level = 0.95, method = :cp)
     @test collect(ci)  ≈ [0.2847674761414794, 0.48253930575080645] atol=1E-6
     ci = MetidaFreq.propci(38, 100; level = 0.95, method = :cp)
     @test collect(ci)  ≈ [0.2847674761414794, 0.48253930575080645] atol=1E-6
-    #SOC
+    # SOC
     ci = MetidaFreq.propci(ct; level = 0.95, method = :soc)
     @test collect(ci)  ≈ [0.2891917018839231, 0.4775592393403469] atol=1E-6
     ci = MetidaFreq.propci(38, 100; level = 0.95, method = :soc)
     @test collect(ci)  ≈ [0.2891917018839231, 0.4775592393403469] atol=1E-6
-    #Blaker - check!
+    # Blaker - check!
     ci = MetidaFreq.propci(ct; level = 0.95, method = :blaker)
     @test collect(ci)  ≈ [0.2881924139040972, 0.4798218835425426] atol=1E-6
     ci = MetidaFreq.propci(38, 100; level = 0.95, method = :blaker)
     @test collect(ci)  ≈ [0.2881924139040972, 0.4798218835425426] atol=1E-6
-    #arcsine
+    # arcsine
     ci = MetidaFreq.propci(ct; level = 0.95, method = :arc)
     @test collect(ci)  ≈ [0.2877714314998773, 0.47682358116201534] atol=1E-6
     ci = MetidaFreq.propci(38, 100; level = 0.95, method = :arc)
     @test collect(ci)  ≈ [0.2877714314998773, 0.47682358116201534] atol=1E-6
-    #Jeffrey
+    # Jeffrey
     ci = MetidaFreq.propci(ct; level = 0.95, method = :jeffrey)
     @test collect(ci)  ≈ [0.2893837310094326, 0.4774506923359312] atol=1E-6
     ci = MetidaFreq.propci(38, 100; level = 0.95, method = :jeffrey)
@@ -69,6 +69,21 @@ transform!(freqdat, :col => categorical, renamecols=false)
 end
 
 @testset "  Proportion difference Confidence Intarvals               " begin
+    ct = MetidaFreq.contab([30 70; 40 50])
+    # Miettinen & Nurminen
+    ci = MetidaFreq.diffci(ct; level = 0.95, method = :mn)
+    @test collect(ci)  ≈ [-0.2781290897168457, -0.006708341755865329] atol=1E-6
+    # Wald
+    ci = MetidaFreq.diffci(ct; level = 0.95, method = :wald)
+    @test collect(ci)  ≈ [-0.28084842238, -0.00804046650] atol=1E-6
+    # Wald CC
+    ci = MetidaFreq.diffci(ct; level = 0.95, method = :waldcc)
+    @test collect(ci)  ≈ [-0.29140397794, 0.00251508905] atol=1E-6
+    # Newcombe Hybrid Score
+    ci = MetidaFreq.diffci(ct; level = 0.95, method = :nhs)
+    @test collect(ci)  ≈ [-0.275381800, -0.007158419] atol=1E-6
+    # # Newcombe Hybrid Score CC
+
 end
 
 @testset "  Odd ratio Confidence Intarvals                           " begin

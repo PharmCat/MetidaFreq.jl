@@ -1,11 +1,13 @@
 
 
 """
-    diffci(contab::ConTab; level = 0.95, method = :default)
+    diffci(x1, n1, x2, n2; level = 0.95, method = :default)
+
+Proportion difference (x1 / n1 - x2 / n2) confidence interval.
 
 * 'method'
 
-- `:mn`
+- `:mn` | `:default`
 - `:wald`
 - `:waldcc`
 - `:nhs`
@@ -15,13 +17,9 @@
 - `:mnmee`
 - `:mover`
 """
-function diffci(contab::ConTab; level = 0.95, method = :default)
-    if !(size(contab.tab, 1) == size(contab.tab, 2) == 2) throw(ArgumentError("CI only for 2 X 2 tables.")) end
+function diffci(x1, n1, x2, n2; level = 0.95, method = :default)
+    
     alpha    = 1 - level
-    x1 = contab.tab[1,1]
-    n1 = x1 + contab.tab[1,2]
-    x2 = contab.tab[2,1]
-    n2 = x2 + contab.tab[2,2]
     if method == :mn || method == :default
         ci_diff_mn(x1, n1, x2, n2, alpha)
     elseif method == :wald
@@ -43,6 +41,26 @@ function diffci(contab::ConTab; level = 0.95, method = :default)
     else
         throw(ArgumentError("unknown ci method=$(method)"))
     end
+end
+"""
+    diffci(contab::ConTab; level = 0.95, method = :default)
+
+ConTab 2X2:
+
+A | B
+--|--
+C | D
+
+Difference: A / (A + B) - C / (C + D)
+"""
+function diffci(contab::ConTab; level = 0.95, method = :default)
+    if !(size(contab.tab, 1) == size(contab.tab, 2) == 2) throw(ArgumentError("CI only for 2 X 2 tables.")) end
+    alpha    = 1 - level
+    x1 = contab.tab[1,1]
+    n1 = x1 + contab.tab[1,2]
+    x2 = contab.tab[2,1]
+    n2 = x2 + contab.tab[2,2]
+    diffci(x1, n1, x2, n2; level = level, method = method)
 end
 """
     orci(contab::ConTab; level = 0.95, method = :default)
