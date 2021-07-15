@@ -11,9 +11,9 @@ using Tables, CategoricalArrays, Distributions, Roots, StatsBase
 
 import HypothesisTests
 
-import MetidaBase: AbstractData, AbstractIdData, DataSet, Proportion
+import MetidaBase: AbstractData, AbstractIdData, DataSet, Proportion, PrettyTables
 import HypothesisTests: ChisqTest, MultinomialLRTest, FisherExactTest
-import Base: ht_keyindex, size
+import Base: ht_keyindex, size, show
 
 export contab, diffci, confint
 
