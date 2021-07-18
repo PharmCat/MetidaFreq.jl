@@ -80,14 +80,46 @@ end
     # Newcombe Hybrid Score
     ci = MetidaFreq.diffci(ct; level = 0.95, method = :nhs)
     @test collect(ci)  ≈ [-0.275381800, -0.007158419] atol=1E-6
-    # # Newcombe Hybrid Score CC
+    # Newcombe Hybrid Score CC
+
+    # Agresti-Caffo interval
+    ci = MetidaFreq.diffci(ct; level = 0.95, method = :ac)
+    @test collect(ci)  ≈ [-0.276944506, -0.006516705] atol=1E-6
+    # ha
+
+    # mnmee
+
+    # mover
 
 end
 
 @testset "  Odd ratio Confidence Intarvals                           " begin
+    ct = MetidaFreq.contab([30 70; 40 50])
+    # Miettinen & Nurminen
+    ci = MetidaFreq.orci(ct; level = 0.95, method = :mn)
+    @test collect(ci)  ≈ [0.29537414, 0.97166697] atol=1E-6
+
+    # woolf
+
+    # awoolf
+
+    #mover
+
+
 end
 
 @testset "  Risk ratio Confidence Intarvals                          " begin
+    ct = MetidaFreq.contab([30 70; 40 50])
+    # Miettinen & Nurminen
+    ci = MetidaFreq.rrci(ct; level = 0.95, method = :mn)
+    @test collect(ci)  ≈ [0.46636099123297575, 0.9799258384796817] atol=1E-6
+
+    # cli
+
+    # li
+
+    #mover
+
 end
 
 @testset "  Contab from tabular data                                 " begin

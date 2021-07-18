@@ -9,6 +9,10 @@ struct ConTab{T <: AbstractMatrix{Int}, R <: Union{Vector{String}, Nothing}, C <
 end
 
 """
+    contab(m::AbstractMatrix{Int};
+        rownames::Union{Vector{String}, Nothing} = nothing,
+        colnames::Union{Vector{String}, Nothing} = nothing,
+        id::Dict = Dict())
 """
 function contab(m::AbstractMatrix{Int};
     rownames::Union{Vector{String}, Nothing} = nothing,
@@ -16,6 +20,12 @@ function contab(m::AbstractMatrix{Int};
     id::Dict = Dict())
     ConTab{typeof(m), typeof(rownames), typeof(colnames), typeof(id)}(m, rownames, colnames, id)
 end
+"""
+    contab(v::AbstractVector{Int};
+        rownames::Union{Vector{String}, Nothing} = nothing,
+        colnames::Union{Vector{String}, Nothing} = nothing,
+        id::Dict = Dict())
+"""
 function contab(v::AbstractVector{Int};
     rownames::Union{Vector{String}, Nothing} = nothing,
     colnames::Union{Vector{String}, Nothing} = nothing,
@@ -23,6 +33,7 @@ function contab(v::AbstractVector{Int};
     contab(permutedims(v); rownames = rownames, colnames = colnames, id = id)
 end
 """
+    contab(data, row::Symbol, col::Symbol; sort::Union{Nothing, Symbol, AbstractVector{Symbol}} = nothing, id = nothing)
 """
 function contab(data, row::Symbol, col::Symbol; sort::Union{Nothing, Symbol, AbstractVector{Symbol}} = nothing, id = nothing)
     cols = Tables.columns(data)
