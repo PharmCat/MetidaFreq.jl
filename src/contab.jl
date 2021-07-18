@@ -29,29 +29,46 @@ function contab(data, row::Symbol, col::Symbol; sort::Union{Nothing, Symbol, Abs
     c    = isnothing(sort) ? (row, col) : isa(sort, Symbol) ? (row, col, sort) : Tuple(append!([row, col], sort))
     res  = contab_(Tuple(Tables.getcolumn(cols, y) for y in c))
     s    = size(res[1])
+    rdi = res[2][1]
+    cdi = res[2][2]
+    rowstr = Vector{String}(undef, length(rdi))
+    colstr = Vector{String}(undef, length(cdi))
     if length(s) > 2
         dimn  = length(s) - 2
-        ci    = CartesianIndices(s[3:end])
+        ci    = CartesianIndices(s[3:end]) #?
         v     = Vector{ConTab}(undef, length(ci))
-        ckeys = Vector{Vector}(undef, dimn)
+        rdict = Vector{Dict}(undef, dimn)
         for i = 1:length(s)-2
-            ckeys[i] = collect(keys(res[2][2+i]))
+            rdict[i] = Dict(v => k for (k,v) in res[2][2+i])
         end
         for i = 1:length(ci)
             id = Dict{Symbol, promote_type(eltype.(ckeys)...)}()
             for j = 1:length(ci[i])
-                id[c[2+j]] = ckeys[j][ci[i][j]]
+                id[c[2+j]] = rdict[j][ci[i][j]]
             end
-            v[i] = ConTab(Matrix(view(res[1], :, :, ci[i])), string.(collect(keys(res[2][1]))),  string.(collect(keys(res[2][2]))), id)
+            for k in keys(rdi)
+                rowstr[rdi[k]] = String(k)
+            end
+            for k in keys(cdi)
+                colstr[cdi[k]] = String(k)
+            end
+            v[i] = ConTab(Matrix(view(res[1], :, :, ci[i])), rowstr,  colstr, id)
         end
         return DataSet(v)
     else
-        return ConTab(res[1], string.(collect(keys(res[2][1]))),  string.(collect(keys(res[2][2]))), (isnothing(id) ? Dict() : id))
+        for k in keys(rdi)
+            rowstr[rdi[k]] = string(k)
+        end
+        for k in keys(cdi)
+            colstr[cdi[k]] = string(k)
+        end
+        return ConTab(res[1], rowstr,  colstr, (isnothing(id) ? Dict() : id))
     end
 end
 
-function contab_(data::Tuple)
-    d = Dict{Tuple{eltype.(data)...}, Int}()
+function contab_(data::Tuple, T::Type = promote_type(eltype.(data)...))
+    #d = Dict{Tuple{eltype.(data)...}, Int}()
+    d = Dict{Tuple{map(eltype, data)...}, Int}()
     for (i, element) in enumerate(zip(data...))
         ind = ht_keyindex(d, element)
         if ind > 0
@@ -62,21 +79,48 @@ function contab_(data::Tuple)
     end
     k    = collect(keys(d))
     n    = length(data)
-    dims = Vector{Dict}(undef, n)
-    for i = 1:n
+    dims = Vector{Dict{T, Int}}(undef, n)
+    @inbounds for i in Base.OneTo(n)
         dims[i] = Dict{eltype(data[i]), Int}()
         s = Set{eltype(data[i])}()
-        for j in 1:length(k)
+        @inbounds for j in Base.OneTo(length(k))
             push!(s, k[j][i])
         end
         us = collect(s)
-        @inbounds for v = 1:length(us)
+        @inbounds for v in Base.OneTo(length(us))
             dims[i][us[v]] = v
         end
     end
     m = zeros(Int, length.(dims)...)
-    @inbounds for j in 1:length(k)
+    @inbounds for j in Base.OneTo(length(k))
         m[map(getindex, dims, k[j])...] = d[k[j]]
+    end
+    m, dims
+end
+
+
+function contab_(data::NTuple{n, AbstractCategoricalVector}, T::Type = promote_type(eltype.(data)...)) where n
+
+
+    levs = map(levels, data)
+    dims = Tuple(map(length, levs))
+
+    #ci = CartesianIndices(dims)
+    li = LinearIndices(dims)
+    a = zeros(Int, length(li))
+
+    r = Vector{Int}(undef, n)
+    @inbounds for i in 1:length(data[1])
+        for j = 1:n
+            r[j] = Int(data[j].refs[i])
+        end
+        a[li[r...]] += 1
+    end
+    m = reshape(a, dims...)
+
+    dims = Vector{Dict}(undef, n)
+    for i = 1:n
+        dims[i] = data[i].pool.invindex
     end
     m, dims
 end

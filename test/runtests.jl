@@ -4,15 +4,13 @@ using DataFrames, CSV, CategoricalArrays
 
 path     = dirname(@__FILE__)
 io       = IOBuffer();
-freqdat  = CSV.File(path*"/csv/freqdat.csv") |> DataFrame
+
 
 #dat.li2007
 #dat.hine1989
 #dat.graves2010
 #dat.bourassa1996
 
-transform!(freqdat, :row => categorical, renamecols=false)
-transform!(freqdat, :col => categorical, renamecols=false)
 
 @testset "  Proportion Confidence Intarvals                          " begin
     ct = MetidaFreq.contab([38, 62])
@@ -93,11 +91,21 @@ end
 end
 
 @testset "  Contab from tabular data                                 " begin
+    freqdat  = CSV.File(path*"/csv/freqdat.csv") |> DataFrame
     ct = MetidaFreq.contab(freqdat, :row, :col)
     @test ct.tab[1,1] == 21
     @test ct.tab[1,2] == 5
     @test ct.tab[2,1] == 8
     @test ct.tab[2,2] == 9
+
+    transform!(freqdat, :row => categorical, renamecols=false)
+    transform!(freqdat, :col => categorical, renamecols=false)
+
+    ct = MetidaFreq.contab(freqdat, :row, :col)
+    @test ct.tab[1,1] == 8
+    @test ct.tab[1,2] == 9
+    @test ct.tab[2,1] == 21
+    @test ct.tab[2,2] == 5
 end
 
 @testset "  Meta proportions                                         " begin
