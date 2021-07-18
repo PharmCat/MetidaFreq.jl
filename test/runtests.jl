@@ -106,6 +106,49 @@ end
     @test ct.tab[1,2] == 9
     @test ct.tab[2,1] == 21
     @test ct.tab[2,2] == 5
+
+    freqdat2  = CSV.File(path*"/csv/ft.csv") |> DataFrame
+
+    ct = MetidaFreq.contab(freqdat2, :row, :col)
+    @test ct.tab[1,1] == 20
+    @test ct.tab[1,2] == 24
+    @test ct.tab[2,1] == 83
+    @test ct.tab[2,2] == 44
+
+    ct = MetidaFreq.contab(freqdat2, :row, :col; sort = :s1)
+
+    @test ct[1].tab[1,1] == 0
+    @test ct[1].tab[1,2] == 2
+    @test ct[1].tab[2,1] == 65
+    @test ct[1].tab[2,2] == 34
+
+    @test ct[2].tab[1,1] == 20
+    @test ct[2].tab[1,2] == 22
+    @test ct[2].tab[2,1] == 18
+    @test ct[2].tab[2,2] == 10
+
+    ct = MetidaFreq.contab(freqdat2, :row, :col; sort = [:s1, :s2])
+    @test  length(ct) == 6
+
+    @test ct[6].id[:s1] == "e"
+    @test ct[6].id[:s2] == "i"
+
+    @test ct[6].tab[1,1] == 6
+    @test ct[6].tab[1,2] == 12
+    @test ct[6].tab[2,1] == 18
+    @test ct[6].tab[2,2] == 10
+
+    transform!(freqdat2, :row => categorical, renamecols=false)
+    transform!(freqdat2, :col => categorical, renamecols=false)
+    transform!(freqdat2, :s1 => categorical, renamecols=false)
+    transform!(freqdat2, :s2 => categorical, renamecols=false)
+
+    ct = MetidaFreq.contab(freqdat2, :row, :col; sort = [:s1, :s2])
+
+    @test ct[5].tab[1,1] == 12
+    @test ct[5].tab[1,2] == 6
+    @test ct[5].tab[2,1] == 10
+    @test ct[5].tab[2,2] == 18
 end
 
 @testset "  Meta proportions                                         " begin

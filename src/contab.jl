@@ -42,9 +42,9 @@ function contab(data, row::Symbol, col::Symbol; sort::Union{Nothing, Symbol, Abs
             rdict[i] = Dict(v => k for (k,v) in res[2][2+i])
         end
         for i = 1:length(ci)
-            id = Dict{Symbol, promote_type(eltype.(ckeys)...)}()
+            id = Vector{Pair}(undef, length(ci[i]))
             for j = 1:length(ci[i])
-                id[c[2+j]] = rdict[j][ci[i][j]]
+                id[j] = c[2+j] => rdict[j][ci[i][j]]
             end
             for k in keys(rdi)
                 rowstr[rdi[k]] = String(k)
@@ -52,7 +52,7 @@ function contab(data, row::Symbol, col::Symbol; sort::Union{Nothing, Symbol, Abs
             for k in keys(cdi)
                 colstr[cdi[k]] = String(k)
             end
-            v[i] = ConTab(Matrix(view(res[1], :, :, ci[i])), rowstr,  colstr, id)
+            v[i] = ConTab(Matrix(view(res[1], :, :, ci[i])), rowstr,  colstr, Dict(id))
         end
         return DataSet(v)
     else
@@ -91,38 +91,48 @@ function contab_(data::Tuple, T::Type = promote_type(eltype.(data)...))
             dims[i][us[v]] = v
         end
     end
+
     m = zeros(Int, length.(dims)...)
     @inbounds for j in Base.OneTo(length(k))
         m[map(getindex, dims, k[j])...] = d[k[j]]
     end
+
+    #=
+    diml = Tuple(map(length, dims))
+    li   = LinearIndices(diml)
+    m = zeros(Int, length(li))
+    @inbounds for j in Base.OneTo(length(k))
+        m[li[map(getindex, dims, k[j])...]] = d[k[j]]
+    end
+    reshape(m, diml...), dims
+    =#
     m, dims
 end
 
+function getinvindex(data)
+    data.pool.invindex
+end
 
-function contab_(data::NTuple{n, AbstractCategoricalVector}, T::Type = promote_type(eltype.(data)...)) where n
-
+function contab_(data::NTuple{n, AbstractCategoricalVector}) where n
 
     levs = map(levels, data)
     dims = Tuple(map(length, levs))
 
     #ci = CartesianIndices(dims)
+    #m  = zeros(Int, dims...)
     li = LinearIndices(dims)
     a = zeros(Int, length(li))
 
     r = Vector{Int}(undef, n)
     @inbounds for i in 1:length(data[1])
-        for j = 1:n
+        @inbounds for j = 1:n
             r[j] = Int(data[j].refs[i])
         end
         a[li[r...]] += 1
+        #m[r...] += 1
     end
-    m = reshape(a, dims...)
-
-    dims = Vector{Dict}(undef, n)
-    for i = 1:n
-        dims[i] = data[i].pool.invindex
-    end
-    m, dims
+    #m = reshape(a, dims...)
+    reshape(a, dims...), getinvindex.(data)
 end
 
 function Base.size(contab::ConTab)
