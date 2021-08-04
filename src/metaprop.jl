@@ -18,7 +18,7 @@ struct MetaPropResult{Symbol}
 end
 
 """
-    metaprop(ds, metric; adj = 0)
+    metaprop(d, metric; adj = 0)
 
 Meta-analysis for 2x2 tables.
 
@@ -29,18 +29,18 @@ Meta-analysis for 2x2 tables.
 - :or
 - :diff
 """
-function metaprop(ds, metric; adj = 0)
+function metaprop(d::DataSet, metric; adj = 0)
     if metric == :diff
-        cty = contabdiff.(ds.data; adj = adj)
+        cty = contabdiff.(d.ds; adj = adj)
     elseif metric == :or
-        cty = contabor.(ds.data; adj = adj)
+        cty = contabor.(d.ds; adj = adj)
     elseif metric == :rr
-        cty = contabrr.(ds.data; adj = adj)
+        cty = contabrr.(d.ds; adj = adj)
     else
     end
     y   = getindex.(cty, 1)
     var = getindex.(cty, 2)
-    MetaProp(ds.data, metric, y, var)
+    MetaProp(d.ds, metric, y, var)
 end
 
 """
