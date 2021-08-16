@@ -15,7 +15,7 @@ HypothesisTests  = "09f84164-cd44-5f33-b23f-e6b0d136a0d5"
 
 [compat]
 
-MetidaBase = "0.3"
+MetidaBase = "0.3, 0.4"
 Tables = "1"
 CategoricalArrays = "0.8, 0.9, 0.10"
 Distributions = "0.20, 0.21, 0.22, 0.23, 0.24, 0.25"
