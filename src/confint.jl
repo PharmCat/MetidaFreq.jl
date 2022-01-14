@@ -14,7 +14,7 @@ Proportion difference (x1 / n1 - x2 / n2) confidence interval.
 - `:nhscc` - Newcombes Hybrid Score CC; Newcombe (1998);
 - `:ac` -  Agresti-Caffo interval; Agresti A, Caffo B., “Simple and effective confidence intervals for proportions and differences of proportions result from adding two successes and two failures”, American Statistician 54: 280–288 (2000);
 - `:ha` - Hauck-Andersen; Hauck, W. W., & Anderson, S. (1986). A Comparison of Large-Sample Confidence Interval Methods for the Difference of Two Binomial Probabilities. The American Statistician, 40(4), 318–322. doi:10.1080/00031305.1986.10475426 ;
-- `:mnmee` - Mee maximum likelihood method; Mee RW (1984) Confidence bounds for the difference between two probabilities,Biometrics40:1175-1176
+- `:fm` | `:mnmee` - Mee maximum likelihood method; Mee RW (1984) Confidence bounds for the difference between two probabilities,Biometrics40:1175-1176
 - `:mover` - Method of variance estimates recovery;
 - `:jeffrey` - Brown, Li's Jeffreys.
 
@@ -42,8 +42,8 @@ function diffci(x1, n1, x2, n2; level = 0.95, method = :default)
         ci_diff_ac(x1, n1, x2, n2, alpha)
     elseif method == :ha
         ci_diff_ha(x1, n1, x2, n2, alpha)
-    elseif method == :mnmee
-        ci_diff_mnmee(x1, n1, x2, n2, alpha)
+    elseif method == :fm || method == :mnmee
+        ci_diff_fm(x1, n1, x2, n2, alpha)
     elseif method == :mover
         ci_diff_mover(x1, n1, x2, n2, alpha)
     elseif method == :jeffrey
@@ -89,6 +89,8 @@ function orci(contab::ConTab; level = 0.95, method = :default)
     n2 = x2 + contab.tab[2,2]
     if method == :mn || method == :default
         ci_or_mn(x1, n1, x2, n2, alpha)
+    elseif method == :fm || method == :mee
+        ci_or_fm(x1, n1, x2, n2, alpha)
     elseif method == :woolf
         ci_or_woolf(x1, n1, x2, n2, alpha)
     elseif method == :awoolf
@@ -103,8 +105,9 @@ end
     rrci(contab::ConTab; level = 0.95, method = :default)
 
 - `:mn`
+- `:fm` | `:mee`
 - `:cli`
-- `:li`
+- `:li` | `:wald`
 - `:mover`
 """
 function rrci(contab::ConTab; level = 0.95, method = :default)
@@ -116,9 +119,11 @@ function rrci(contab::ConTab; level = 0.95, method = :default)
     n2 = x2 + contab.tab[2,2]
     if method == :mn || method == :default
         ci_rr_mn(x1, n1, x2, n2, alpha)
+    elseif method == :fm || method == :mee
+        ci_rr_fm(x1, n1, x2, n2, alpha)
     elseif method == :cli
         ci_rr_cli(x1, n1, x2, n2, alpha)
-    elseif method == :li
+    elseif method == :li || method == :wald
         ci_rr_li(x1, n1, x2, n2, alpha)
     elseif method == :mover
         ci_rr_mover(x1, n1, x2, n2, alpha)
@@ -240,26 +245,29 @@ end
     θ = n2 / n1
     a = 1 + θ
     b = -(1 + θ + p1 + θ * p2 + δ * (θ + 2))
-    c = δ^2 + δ * (2 * p1 + θ + 1) + p1 + θ * p2
+    c = δ^2 + δ * (2p1 + θ + 1) + p1 + θ * p2
     d = -p1 * δ * (1 + δ)
-    v = (b / a / 3)^3 - b * c/(6 * a * a) + d / 2 / a
-    u = sign(v) * sqrt((b / 3 / a)^2 - c / 3 / a)
+    v = (b / 3a)^3 - b * c / (6 * a * a) + d / 2a
+    u = sign(v) * sqrt((b / 3a)^2 - c / 3a)
     w = (pi + acos(v / u^3)) / 3
-    p1n = 2 * u * cos(w) - b / 3 /a
+    p1n = 2u * cos(w) - b / 3a
     p2n = p1n - δ
     return p1n, p2n
 end
-@inline function mn_diff_z_val(p1, n1, p2, n2, est, δ)
+@inline function mn_fm_diff_z_val(p1, n1, p2, n2, est, δ)
     p1n, p2n = mle_diff(p1, n1, p2, n2, δ)
-    return (est - δ)^2 / ((n1 + n2) / (n1 + n2 - 1) * (p1n * (1 - p1n) / n1 + p2n * (1 - p2n) / n2))
+    return (est - δ)^2 / (p1n * (1 - p1n) / n1 + p2n * (1 - p2n) / n2)
+end
+@inline function mn_diff_z_val(p1, n1, p2, n2, est, δ)
+    mn_fm_diff_z_val(p1, n1, p2, n2, est, δ) / (n1 + n2) * (n1 + n2 - 1)
 end
 function ci_diff_mn(x1, n1, x2, n2, alpha; atol::Float64 = 1E-8)
     lcis, ucis = ci_diff_nhs_cc(x1, n1, x2, n2, alpha)
     p1       = x1 / n1
     p2       = x2 / n2
     est      = p1 - p2
-    z        = quantile(Chisq(1), 1 - alpha)
-    fmnd(x)  = mn_diff_z_val(p1, n1, p2, n2, est, x) - z
+    z²        = quantile(Chisq(1), 1 - alpha)
+    fmnd(x)  = mn_diff_z_val(p1, n1, p2, n2, est, x) - z²
     if fmnd(lcis) * fmnd(est - eps()) < 0.0
         ll = lcis
         lu = est - eps()
@@ -277,6 +285,34 @@ function ci_diff_mn(x1, n1, x2, n2, alpha; atol::Float64 = 1E-8)
     lci = find_zero(fmnd, (ll, lu), atol = atol)
     uci = find_zero(fmnd, (ul, uu), atol = atol)
     return lci, uci
+end
+# FM / MEE
+# Mee RW (1984) Confidence bounds for the difference between two probabilities,Biometrics40:1175-1176
+# MN - no correction
+function ci_diff_fm(x1, n1, x2, n2, alpha; atol::Float64 = 1E-8)
+    lcis, ucis = ci_diff_nhs_cc(x1, n1, x2, n2, alpha)
+    p1       = x1 / n1
+    p2       = x2 / n2
+    est      = p1 - p2
+    z²        = quantile(Chisq(1), 1 - alpha)
+    fmnd(x)  = mn_fm_diff_z_val(p1, n1, p2, n2, est, x) - z²
+    if fmnd(lcis) * fmnd(est - eps()) < 0.0
+        ll = lcis
+        lu = est - eps()
+    else
+        ll = -1.0 + eps()
+        lu = lcis
+    end
+    if fmnd(ucis) * fmnd(est + eps()) < 0.0
+        ul = est + eps()
+        uu = ucis
+    else
+        ul = ucis
+        uu = 1.0 - eps()
+    end
+    lci = find_zero(fmnd, (ll, lu), atol = atol)
+    uci = find_zero(fmnd, (ul, uu), atol = atol)
+    return  lci, uci
 end
 # Wald
 function ci_diff_wald(x1, n1, x2, n2, alpha)
@@ -342,37 +378,6 @@ function ci_diff_ha(x1, n1, x2, n2, alpha)
     cc       = 1 / min(n1, n2)
     return est - z * se - cc, est + z * se + cc
 end
-# Mee RW (1984) Confidence bounds for the difference between two probabilities,Biometrics40:1175-1176
-# MN - no correction
-@inline function mnmee_z_val(p1, n1, p2, n2, est, δ)
-    p1n, p2n = mle_diff(p1, n1, p2, n2, δ)
-    return (est - δ)^2 / (p1n * (1 - p1n) / n1 + p2n * (1 - p2n) / n2)
-end
-function ci_diff_mnmee(x1, n1, x2, n2, alpha; atol::Float64 = 1E-8)
-    lcis, ucis = ci_diff_nhs_cc(x1, n1, x2, n2, alpha)
-    p1       = x1 / n1
-    p2       = x2 / n2
-    est      = p1 - p2
-    z        = quantile(Chisq(1), 1 - alpha)
-    fmnd(x)  = mnmee_z_val(p1, n1, p2, n2, est, x) - z
-    if fmnd(lcis) * fmnd(est - eps()) < 0.0
-        ll = lcis
-        lu = est - eps()
-    else
-        ll = -1.0 + eps()
-        lu = lcis
-    end
-    if fmnd(ucis) * fmnd(est + eps()) < 0.0
-        ul = est + eps()
-        uu = ucis
-    else
-        ul = ucis
-        uu = 1.0 - eps()
-    end
-    lci = find_zero(fmnd, (ll, lu), atol = atol)
-    uci = find_zero(fmnd, (ul, uu), atol = atol)
-    return  lci, uci
-end
 # Brown, Li's Jeffreys
 function ci_diff_jeffreys(x1, n1, x2, n2, alpha)
     p1   = (x1 +  1/2) / (n1 + 1)
@@ -398,24 +403,42 @@ end
 # Odd ratio CI
 ################################################################################
 @inline function mle_or(φ, x1, n1, x2, n2)
-    a  = n2 * (φ-1)
+    a  = n2 * (φ - 1)
     b  = φ * n1 + n2 - (x1 + x2) * (φ - 1)
     c  = -(x1 + x2)
-    p2 = (-b + sqrt(b * b - 4 * a * c)) / a / 2
-    p1 = p2 * φ/(1 + p2 * (φ - 1))
+    p2 = (-b + sqrt(b * b - 4 * a * c)) / 2a
+    p1 = p2 * φ / (1 + p2 * (φ - 1))
     return p1, p2
 end
-@inline function mle_or_z_val(φ, x1, n1, x2, n2)
+@inline function mle_fm_or_z_val(φ, x1, n1, x2, n2)
     p1 = x1 / n1
     pmle1, pmle2 = mle_or(φ, x1, n1, x2, n2)
-    return (n1 * (p1 - pmle1))^2 * (1 / (n1 * pmle1 * (1 - pmle1)) + 1/(n2 * pmle2 * (1 - pmle2))) / ((n1 + n2)/(n1 + n2 - 1))
+    return (n1 * (p1 - pmle1))^2 * (1 / (n1 * pmle1 * (1 - pmle1)) + 1/(n2 * pmle2 * (1 - pmle2)))
+end
+@inline function mle_or_z_val(φ, x1, n1, x2, n2)
+    mle_fm_or_z_val(φ, x1, n1, x2, n2) / (n1 + n2) * (n1 + n2 - 1)
 end
 ################################################################################
 # Miettinen O. S., Nurminen M. (1985) Comparative analysis of two rates.Statistics in Medicine4,213–226
 # MN Score
 function ci_or_mn(x1, n1, x2, n2, alpha; atol::Float64 = 1E-8)
-    z        = quantile(Chisq(1), 1 - alpha)
-    fmnor(x) = mle_or_z_val(x, x1, n1, x2, n2) - z
+    z²        = quantile(Chisq(1), 1 - alpha)
+    fmnor(x) = mle_or_z_val(x, x1, n1, x2, n2) - z²
+    if (x1== 0 && x2 == 0) || (x1 == n1 && x2 == n2)
+        return 0.0, Inf
+    elseif x1==0 || x2 == n2
+        return 0.0, find_zero(fmnor, atol, atol = atol)
+    elseif x1 == n1 || x2 == 0
+        return find_zero(fmnor, atol, atol = atol), Inf
+    else
+        est  = (x1 / (n1 - x1)) / (x2 / (n2 - x2))
+        return find_zero(fmnor, atol, atol = atol), find_zero(fmnor, est + atol, atol = atol)
+    end
+end
+# FM Score
+function ci_or_fm(x1, n1, x2, n2, alpha; atol::Float64 = 1E-8)
+    z²        = quantile(Chisq(1), 1 - alpha)
+    fmnor(x) = mle_fm_or_z_val(x, x1, n1, x2, n2) - z²
     if (x1== 0 && x2 == 0) || (x1 == n1 && x2 == n2)
         return 0.0, Inf
     elseif x1==0 || x2 == n2
@@ -475,24 +498,43 @@ end
 ################################################################################
 @inline function mle_rr(φ, x1, n1, x2, n2)
     a = (n1 + n2) * φ
-    b = -(φ * (x1 + n2) + x2 + n1)
+    b = -(φ * (x2 + n1) + x1 + n2)
     c = x1 + x2
-    p2 = (-b - sqrt(b * b - 4 * a * c)) / 2 / a
+    p2 = (-b - sqrt(b * b - 4a * c)) / 2a
     p1 = p2 * φ
     return p1, p2
 end
-@inline function mle_rr_z_val(φ, x1, n1, x2, n2)
+@inline function mle_fm_rr_z_val(φ, x1, n1, x2, n2)
     p1 = x1 / n1
     p2 = x2 / n2
     pmle1, pmle2 = mle_rr(φ, x1, n1, x2, n2)
-    return (p1 - φ * p2)^2 / ((pmle1 * (1 - pmle1) / n1 + φ * φ * pmle2 * (1 - pmle2) / n2) * ((n1 + n2 - 1) / (n1 + n2)))
+    return (p1 - φ * p2)^2 / (pmle1 * (1 - pmle1) / n1 + φ * φ * pmle2 * (1 - pmle2) / n2)
+end
+@inline function mle_rr_z_val(φ, x1, n1, x2, n2)
+    mle_fm_rr_z_val(φ, x1, n1, x2, n2) / (n1 + n2) * (n1 + n2 - 1)
 end
 ################################################################################
 # Miettinen-Nurminen Score interval
 # Miettinen, O. and Nurminen, M. (1985), Comparative analysis of two rates. Statist. Med., 4: 213-226. doi:10.1002/sim.4780040211
 function ci_rr_mn(x1, n1, x2, n2, alpha; atol::Float64 = 1E-8)
-    z        = quantile(Chisq(1), 1 - alpha)
-    fmnrr(x) = mle_rr_z_val(x, x1, n1, x2, n2) - z
+    z²        = quantile(Chisq(1), 1 - alpha)
+    fmnrr(x) = mle_rr_z_val(x, x1, n1, x2, n2) - z²
+    if (x1==0 && x2==0) || (x1==n1 && x2==n2)
+        return  0.0, Inf
+    elseif x1==0 || x2==n2
+        return 0.0, find_zero(fmnrr, atol, atol=atol)
+    elseif x1==n1 || x2 == 0
+        return find_zero(fmnrr, atol, atol=atol), Inf
+    else
+        est = (x1 / n1) / (x2 / n2)
+        return find_zero(fmnrr, atol, atol=atol), find_zero(fmnrr, est + atol, atol=atol)
+    end
+end
+# FM Score interval
+# Farrington, C. P., & Manning, G. (1990). Test statistics and sample size formulae for comparative binomial trials with null hypothesis of non-zero risk difference or non-unity relative risk. Statistics in Medicine, 9(12), 1447–1454. doi:10.1002/sim.4780091208
+function ci_rr_fm(x1, n1, x2, n2, alpha; atol::Float64 = 1E-8)
+    z²        = quantile(Chisq(1), 1 - alpha)
+    fmnrr(x) = mle_fm_rr_z_val(x, x1, n1, x2, n2) - z²
     if (x1==0 && x2==0) || (x1==n1 && x2==n2)
         return  0.0, Inf
     elseif x1==0 || x2==n2
