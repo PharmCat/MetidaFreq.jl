@@ -8,13 +8,13 @@ Proportion difference (x1 / n1 - x2 / n2) confidence interval.
 * 'method'
 
 - `:mn` | `:default`- Miettinen & Nurminen;  Miettinen, O. and Nurminen, M. (1985), Comparative analysis of two rates. Statist. Med., 4: 213-226. doi:10.1002/sim.4780040211;
+- `:fm` | `:mee` - Mee maximum likelihood method; Mee RW (1984) Confidence bounds for the difference between two probabilities,Biometrics40:1175-1176
 - `:wald` - Wald CI without CC;
 - `:waldcc` - Wald CI with CC;
 - `:nhs`  - Newcombes Hybrid (wilson) Score interval; Newcombe RG (1998), Interval Estimation for the Difference Between Independent Proportions: Comparison of Eleven Methods. Statistics in Medicine 17, 873-890;
 - `:nhscc` - Newcombes Hybrid Score CC; Newcombe (1998);
 - `:ac` -  Agresti-Caffo interval; Agresti A, Caffo B., “Simple and effective confidence intervals for proportions and differences of proportions result from adding two successes and two failures”, American Statistician 54: 280–288 (2000);
 - `:ha` - Hauck-Andersen; Hauck, W. W., & Anderson, S. (1986). A Comparison of Large-Sample Confidence Interval Methods for the Difference of Two Binomial Probabilities. The American Statistician, 40(4), 318–322. doi:10.1080/00031305.1986.10475426 ;
-- `:fm` | `:mnmee` - Mee maximum likelihood method; Mee RW (1984) Confidence bounds for the difference between two probabilities,Biometrics40:1175-1176
 - `:mover` - Method of variance estimates recovery;
 - `:jeffrey` - Brown, Li's Jeffreys.
 
@@ -30,6 +30,8 @@ function diffci(x1, n1, x2, n2; level = 0.95, method = :default)
     alpha    = 1 - level
     if method == :mn || method == :default
         ci_diff_mn(x1, n1, x2, n2, alpha)
+    elseif method == :fm || method == :mee
+        ci_diff_fm(x1, n1, x2, n2, alpha)
     elseif method == :wald
         ci_diff_wald(x1, n1, x2, n2, alpha)
     elseif method == :waldcc
@@ -42,8 +44,6 @@ function diffci(x1, n1, x2, n2; level = 0.95, method = :default)
         ci_diff_ac(x1, n1, x2, n2, alpha)
     elseif method == :ha
         ci_diff_ha(x1, n1, x2, n2, alpha)
-    elseif method == :fm || method == :mnmee
-        ci_diff_fm(x1, n1, x2, n2, alpha)
     elseif method == :mover
         ci_diff_mover(x1, n1, x2, n2, alpha)
     elseif method == :jeffrey
@@ -187,10 +187,10 @@ function propci(contab::ConTab; level = 0.95, method = :default)
         for i = 1:size(contab, 1)
             x = contab.tab[i,1]
             n = x + contab.tab[i,2]
-            println(x, " : ", n)
+            #println(x, " : ", n)
             v[i] = propci(x, n; level = level, method = method)
         end
-        return Tuple(v)
+        return v
     else
         x = contab.tab[1,1]
         n = x + contab.tab[1,2]
@@ -379,7 +379,7 @@ function ci_diff_ha(x1, n1, x2, n2, alpha)
     return est - z * se - cc, est + z * se + cc
 end
 # Brown, Li's Jeffreys
-function ci_diff_jeffreys(x1, n1, x2, n2, alpha)
+function ci_diff_jeffrey(x1, n1, x2, n2, alpha)
     p1   = (x1 +  1/2) / (n1 + 1)
     p2   = (x2 +  1/2) / (n2 + 1)
     se   = sqrt(p1*(1 - p1) / n1 + p2 * (1 - p2) / n2)
