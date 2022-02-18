@@ -32,6 +32,15 @@ function contab(v::AbstractVector{Int};
     id::Dict = Dict())
     contab(permutedims(v); rownames = rownames, colnames = colnames, id = id)
 end
+
+"""
+    contab(ct::ConTab, rr, cr)
+"""
+function contab(ct::ConTab, rr, cr)
+    contab(ct.tab[rr,cr]; rownames = ct.rown[rr], colnames = ct.coln[cr], id = ct.id)
+end
+
+
 """
     contab(data, row::Symbol, col::Symbol; sort::Union{Nothing, Symbol, AbstractVector{Symbol}} = nothing, id = nothing)
 """
@@ -153,7 +162,7 @@ function Base.size(contab::ConTab, dim::Int)
     size(contab.tab, dim)
 end
 function Base.show(io::IO, contab::ConTab)
-    println(io, "  Contingency table::")
+    println(io, "  Contingency table:")
     PrettyTables.pretty_table(io, contab.tab; header = contab.coln, row_names = contab.rown, tf = PrettyTables.tf_compact)
     if !isnothing(contab.id) && length(contab.id) > 0
         print(io, "  ID: ")
