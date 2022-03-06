@@ -13,7 +13,7 @@ import HypothesisTests
 
 import MetidaBase: AbstractData, AbstractIdData, DataSet, Proportion, PrettyTables
 import HypothesisTests: ChisqTest, MultinomialLRTest, FisherExactTest
-import Base: ht_keyindex, size, show
+import Base: ht_keyindex, size, show, permutedims
 
 export contab, diffci, confint
 
@@ -23,6 +23,7 @@ export ChisqTest, MultinomialLRTest, FisherExactTest
 
 include("contab.jl")
 include("confint.jl")
+include("freq.jl")
 include("metaprop.jl")
 include("hypothesistest.jl")
 

@@ -198,6 +198,10 @@ end
     @test ct.tab[2,1] == 8
     @test ct.tab[2,2] == 9
 
+    @test_nowarn permutedims(ct)
+    @test_nowarn MetidaFreq.contab(ct, [1], 1:2)
+    @test_nowarn MetidaFreq.contab(ct, 1, 1:2)
+
     Base.show(io, ct)
 
     HypothesisTests.ChisqTest(ct)

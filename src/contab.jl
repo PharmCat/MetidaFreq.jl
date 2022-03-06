@@ -1,7 +1,7 @@
 
 # MetidaFreq.jl
 
-struct ConTab{T <: AbstractMatrix{Int}, R <: Union{Vector{String}, Nothing}, C <: Union{Vector{String}, Nothing}, ID <: Dict} <: AbstractIdData
+struct ConTab{T <: AbstractMatrix{Int}, R <: Union{Nothing, Vector{S}} where S <: AbstractString, C <: Union{Nothing, Vector{S}} where S <: AbstractString, ID <: Dict} <: AbstractIdData
     tab::T
     rown::R
     coln::C
@@ -35,9 +35,22 @@ end
 
 """
     contab(ct::ConTab, rr, cr)
+
+Make ConTab with `ct`, rows `rr` and columns `cr`.
 """
 function contab(ct::ConTab, rr, cr)
-    contab(ct.tab[rr,cr]; rownames = ct.rown[rr], colnames = ct.coln[cr], id = ct.id)
+    if isa(rr, Int) rr = [rr] end
+    if isa(cr, Int) cr = [cr] end
+    contab(ct.tab[rr, cr]; rownames = ct.rown[rr], colnames = ct.coln[cr], id = ct.id)
+end
+
+"""
+    Base.permutedims(ct::ConTab)
+
+ConTab permutedims.
+"""
+function Base.permutedims(ct::ConTab)
+    ConTab(permutedims(ct.tab), ct.coln, ct.rown, ct.id)
 end
 
 
