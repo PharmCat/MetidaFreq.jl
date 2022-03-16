@@ -1,7 +1,7 @@
 
 
 function freq(data, col; id = Dict())
-    if isa(col, String) cols = Symbol(col) end
+    if isa(col, String) cols = Symbol(col) else cols = col end
     column = Tables.getcolumn(data, cols)
     d = Dict{eltype(column), Int}()
     for i in column
