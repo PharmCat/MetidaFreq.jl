@@ -1,7 +1,8 @@
 
 
 function freq(data, col; id = Dict())
-    column = Tables.getcolumn(data, col)
+    if isa(col, String) cols = Symbol(col) end
+    column = Tables.getcolumn(data, cols)
     d = Dict{eltype(column), Int}()
     for i in column
         ind = ht_keyindex(d, i)
