@@ -22,3 +22,7 @@ Contingency table from tabular data
 ```
 MetidaFreq.contab(freqdat, :row, :col)
 ```
+
+## See also
+
+* [https://github.com/nalimilan/FreqTables.jl](https://github.com/nalimilan/FreqTables.jl)

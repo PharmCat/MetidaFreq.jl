@@ -205,6 +205,12 @@ end
 
 @testset "  Contab from tabular data                                 " begin
     freqdat  = CSV.File(path*"/csv/freqdat.csv") |> DataFrame
+
+    ct = MetidaFreq.freq(freqdat, :row)
+    @test ct.tab[1,1] == 26
+    @test ct.tab[1,2] == 17
+
+
     ct = MetidaFreq.contab(freqdat, :row, :col)
     @test ct.tab[1,1] == 21
     @test ct.tab[1,2] == 5
