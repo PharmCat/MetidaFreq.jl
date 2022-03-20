@@ -45,6 +45,10 @@ io       = IOBuffer();
     ci = MetidaFreq.propci(38, 100; level = 0.95, method = :cp)
     @test collect(ci)  ≈ [0.2847674761414794, 0.48253930575080645] atol=1E-6
 
+    @test_nowarn MetidaFreq.propci(0, 100; level = 0.95, method = :cp)
+    @test_nowarn MetidaFreq.propci(100, 100; level = 0.95, method = :cp)
+
+
     # SOC
     ci = MetidaFreq.propci(ct; level = 0.95, method = :soc)
     @test collect(ci)  ≈ [0.2891917018839231, 0.4775592393403469] atol=1E-6
@@ -87,11 +91,15 @@ end
     # Miettinen & Nurminen
     ci = MetidaFreq.diffci(ct; level = 0.95, method = :mn)
     @test collect(ci)  ≈ [-0.2781290897168457, -0.006708341755865329] atol=1E-6
+    @test_nowarn MetidaFreq.diffci(0, 100, 1, 100; level = 0.95, method = :mn)
+    @test_nowarn MetidaFreq.diffci(1, 100, 0, 100; level = 0.95, method = :mn)
 
     # FM | Mee
     # Validate
     ci = MetidaFreq.diffci(ct; level = 0.95, method = :fm)
     @test collect(ci)  ≈ [-0.27778778468650384, -0.007071207814437397] atol=1E-6
+    @test_nowarn MetidaFreq.diffci(0, 100, 1, 100; level = 0.95, method = :fm)
+    @test_nowarn MetidaFreq.diffci(1, 100, 0, 100; level = 0.95, method = :fm)
 
     # Wald
     ci = MetidaFreq.diffci(ct; level = 0.95, method = :wald)
@@ -139,12 +147,14 @@ end
     # 0.2953741424 - 0.9716669781
     ci = MetidaFreq.orci(ct; level = 0.95, method = :mn)
     @test collect(ci)  ≈ [0.2953741424, 0.9716669781] atol=1E-6
-
+    @test_nowarn MetidaFreq.orci(0, 100, 1, 100; level = 0.95, method = :mn)
+    @test_nowarn MetidaFreq.orci(1, 100, 0, 100; level = 0.95, method = :mn)
     # FM
     # 0.2958336891 - 0.9701570484
     ci = MetidaFreq.orci(ct; level = 0.95, method = :fm)
     @test collect(ci)  ≈ [0.2958336891, 0.9701570484] atol=1E-6
-
+    @test_nowarn MetidaFreq.orci(0, 100, 1, 100; level = 0.95, method = :fm)
+    @test_nowarn MetidaFreq.orci(1, 100, 0, 100; level = 0.95, method = :fm)
     # woolf | Wald
     # 0.2950420027 - 0.9727082695
     ci = MetidaFreq.orci(ct; level = 0.95, method = :woolf)
@@ -169,11 +179,14 @@ end
     # 0.4605492931 - 0.9820955908
     ci = MetidaFreq.rrci(ct; level = 0.95, method = :mn)
     @test collect(ci)  ≈ [0.4605492931511954, 0.9820955908214944] atol=1E-6
-
+    @test_nowarn MetidaFreq.rrci(0, 100, 1, 100; level = 0.95, method = :mn)
+    @test_nowarn MetidaFreq.rrci(1, 100, 0, 100; level = 0.95, method = :mn)
     # FM
     # validation
     ci = MetidaFreq.rrci(ct; level = 0.95, method = :fm)
     @test collect(ci)  ≈ [0.46101548213819626, 0.981136152040161] atol=1E-6
+    @test_nowarn MetidaFreq.rrci(0, 100, 1, 100; level = 0.95, method = :fm)
+    @test_nowarn MetidaFreq.rrci(1, 100, 0, 100; level = 0.95, method = :fm)
 
     # cli # validation
     ci = MetidaFreq.rrci(ct; level = 0.95, method = :cli)
