@@ -73,20 +73,15 @@ function diffci(contab::ConTab; level = 0.95, method = :default)
     diffci(x1, n1, x2, n2; level = level, method = method)
 end
 """
-    orci(contab::ConTab; level = 0.95, method = :default)
+    orci(x1, n1, x2, n2; level = 0.95, method = :default)
 
 - `:mn`
 - `:woolf`
 - `:awoolf`
 - `:mover`
 """
-function orci(contab::ConTab; level = 0.95, method = :default)
-    if !(size(contab.tab, 1) == size(contab.tab, 2) == 2) throw(ArgumentError("CI only for 2 X 2 tables.")) end
+function orci(x1, n1, x2, n2; level = 0.95, method = :default)
     alpha    = 1 - level
-    x1 = contab.tab[1,1]
-    n1 = x1 + contab.tab[1,2]
-    x2 = contab.tab[2,1]
-    n2 = x2 + contab.tab[2,2]
     if method == :mn || method == :default
         ci_or_mn(x1, n1, x2, n2, alpha)
     elseif method == :fm || method == :mee
@@ -97,6 +92,47 @@ function orci(contab::ConTab; level = 0.95, method = :default)
         ci_or_awoolf(x1, n1, x2, n2, alpha)
     elseif method == :mover
         ci_or_mover(x1, n1, x2, n2, alpha)
+    else
+        throw(ArgumentError("unknown ci method=$(method)"))
+    end
+end
+"""
+    orci(contab::ConTab; level = 0.95, method = :default)
+
+- `:mn`
+- `:woolf`
+- `:awoolf`
+- `:mover`
+"""
+function orci(contab::ConTab; level = 0.95, method = :default)
+    if !(size(contab.tab, 1) == size(contab.tab, 2) == 2) throw(ArgumentError("CI only for 2 X 2 tables.")) end
+    x1 = contab.tab[1,1]
+    n1 = x1 + contab.tab[1,2]
+    x2 = contab.tab[2,1]
+    n2 = x2 + contab.tab[2,2]
+    orci(x1, n1, x2, n2; level = level, method = method)
+end
+"""
+    rrci(x1, n1, x2, n2; level = 0.95, method = :default)
+
+- `:mn`
+- `:fm` | `:mee`
+- `:cli`
+- `:li` | `:wald`
+- `:mover`
+"""
+function rrci(x1, n1, x2, n2; level = 0.95, method = :default)
+    alpha    = 1 - level
+    if method == :mn || method == :default
+        ci_rr_mn(x1, n1, x2, n2, alpha)
+    elseif method == :fm || method == :mee
+        ci_rr_fm(x1, n1, x2, n2, alpha)
+    elseif method == :cli
+        ci_rr_cli(x1, n1, x2, n2, alpha)
+    elseif method == :li || method == :wald
+        ci_rr_li(x1, n1, x2, n2, alpha)
+    elseif method == :mover
+        ci_rr_mover(x1, n1, x2, n2, alpha)
     else
         throw(ArgumentError("unknown ci method=$(method)"))
     end
@@ -117,19 +153,7 @@ function rrci(contab::ConTab; level = 0.95, method = :default)
     n1 = x1 + contab.tab[1,2]
     x2 = contab.tab[2,1]
     n2 = x2 + contab.tab[2,2]
-    if method == :mn || method == :default
-        ci_rr_mn(x1, n1, x2, n2, alpha)
-    elseif method == :fm || method == :mee
-        ci_rr_fm(x1, n1, x2, n2, alpha)
-    elseif method == :cli
-        ci_rr_cli(x1, n1, x2, n2, alpha)
-    elseif method == :li || method == :wald
-        ci_rr_li(x1, n1, x2, n2, alpha)
-    elseif method == :mover
-        ci_rr_mover(x1, n1, x2, n2, alpha)
-    else
-        throw(ArgumentError("unknown ci method=$(method)"))
-    end
+    rrci(x1, n1, x2, n2; level = level, method = method)
 end
 
 """
