@@ -3,8 +3,8 @@ using Documenter, MetidaFreq, Weave, PrettyTables, CSV, DataFrames
 
 
 makedocs(
-        modules = [MetidaNCA],
-        sitename = "MetidaNCA.jl",
+        modules = [MetidaFreq],
+        sitename = "MetidaFreq.jl",
         authors = "Vladimir Arnautov",
         pages = [
             "Home" => "index.md",
