@@ -1,5 +1,29 @@
 # API
 
+## Contingency tables
+
+### MetidaFreq.contab
+```@docs
+MetidaFreq.contab
+```
+
+### MetidaFreq.freq
+```@docs
+MetidaFreq.freq
+```
+
+## Confidence Intervals
+
+### MetidaFreq.confint
+```@docs
+MetidaFreq.confint
+```
+
+### MetidaFreq.propci
+```@docs
+MetidaFreq.propci
+```
+
 ### MetidaFreq.diffci
 ```@docs
 MetidaFreq.diffci
@@ -15,25 +39,12 @@ MetidaFreq.orci
 MetidaFreq.rrci
 ```
 
-### MetidaFreq.propci
-```@docs
-MetidaFreq.propci
-```
-
 ### MetidaFreq.mpropci
 ```@docs
 MetidaFreq.mpropci
 ```
 
-### MetidaFreq.contab
-```@docs
-MetidaFreq.contab
-```
-
-### MetidaFreq.freq
-```@docs
-MetidaFreq.freq
-```
+## Meta-analysis
 
 ### MetidaFreq.metaprop
 ```@docs
@@ -48,9 +59,4 @@ MetidaFreq.metapropfixed
 ### MetidaFreq.metaproprandom
 ```@docs
 MetidaFreq.metaproprandom
-```
-
-### MetidaFreq.confint
-```@docs
-MetidaFreq.confint
 ```

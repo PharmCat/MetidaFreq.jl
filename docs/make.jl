@@ -8,9 +8,12 @@ makedocs(
         authors = "Vladimir Arnautov",
         pages = [
             "Home" => "index.md",
+            "Contingency tables" => "contab.md",
+            "Confidence intervals" => "ci.md",
+            "HypothesisTests" => "ht.md",
+            "Meta-analysis" => "meta.md",
             "Examples" => "examples.md",
             "Details" => "details.md",
-            "Parameters" => "parameters.md",
             "API" => "api.md"
             ],
         )

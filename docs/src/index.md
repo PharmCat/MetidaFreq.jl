@@ -13,13 +13,14 @@ Metida frequency tables.
 
 ```@contents
 Pages = [
-        "index.md",
-        "contab.md",
-        "ci.md",
-        "meta.md",
-        "details.md",
-        "examples.md",
-        "api.md",
+"index.md",
+"contab.md",
+"ci.md",
+"ht.md",
+"meta.md",
+"examples.md",
+"details.md",
+"api.md"
       ]
 Depth = 3
 ```
