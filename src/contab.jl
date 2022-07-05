@@ -41,7 +41,7 @@ Make ConTab with `ct`, rows `rr` and columns `cr`.
 function contab(ct::ConTab, rr, cr)
     if isa(rr, Int) rr = [rr] end
     if isa(cr, Int) cr = [cr] end
-    contab(ct.tab[rr, cr]; rownames = ct.rown[rr], colnames = ct.coln[cr], id = ct.id)
+    contab(ct.tab[rr, cr]; rownames = ct.rown[rr], colnames = ct.coln[cr], id = copy(ct.id))
 end
 
 """
@@ -50,14 +50,102 @@ end
 ConTab permutedims.
 """
 function Base.permutedims(ct::ConTab)
-    ConTab(permutedims(ct.tab), ct.coln, ct.rown, ct.id)
+    ConTab(permutedims(ct.tab), copy(ct.coln), copy(ct.rown), copy(ct.id))
 end
 
+function sumrows_(f::Function, ct::ConTab)
+    n  = size(ct.tab, 1)
+    mx = Matrix{Int}(undef, n, 1)
+    for i = 1:n
+        mx[i,1] = sum(f, view(ct.tab, i, :))
+    end
+    mx
+end
+"""
+    sumrows(f::Function, contab::ConTab; coln = "Val")
+"""
+function sumrows(f::Function, ct::ConTab; coln = "Val")
+    mx = sumrows_(f, ct)
+    contab(mx;
+        rownames = copy(ct.rown),
+        colnames = [coln],
+        id       = copy(ct.id))
+end
+"""
+    sumrows(contab::ConTab; coln = "Val")
+"""
+function sumrows(ct::ConTab; coln = "Val")
+    sumrows(identity, ct; coln = coln)
+end
+
+"""
+    addcol(ct::ConTab, col::Vector{Int}; coln = "Val")
+"""
+function addcol(ct::ConTab, col::Vector{Int}; coln = "Val")
+    contab(hcat(ct.tab, col);
+        rownames = copy(ct.rown),
+        colnames = push!(copy(ct.rown), coln),
+        id       = copy(ct.id))
+end
+
+"""
+    addcol(f::Function, ct::ConTab; coln = "Val")
+"""
+function addcol(f::Function, ct::ConTab; coln = "Val")
+    n   = size(ct, 1)
+    col = Vector{Int}(undef, n)
+    for i = 1:n
+        col[i] = f(view(ct.tab, i, :))
+    end
+    contab(hcat(ct.tab, col);
+        rownames = copy(ct.rown),
+        colnames = push!(copy(ct.rown), coln),
+        id       = copy(ct.id))
+end
+
+"""
+    addcol(f::Function, ct::ConTab, col::Vector{Int}; coln = "Val")
+"""
+function addcol(f::Function, ct::ConTab, col::Vector{Int}; coln = "Val")
+    n   = size(ct, 1)
+    ncol = Vector{Int}(undef, n)
+    for i = 1:n
+        ncol[i] = f(view(ct.tab, i, :), col[i])
+    end
+    contab(hcat(ct.tab, ncol);
+        rownames = copy(ct.rown),
+        colnames = push!(copy(ct.coln), coln),
+        id       = copy(ct.id))
+end
+"""
+    colreduce(f::Function, data::DataSet{<:ConTab}; coln = nothing)
+"""
+function colreduce(f::Function, data::DataSet{<:ConTab}; coln = nothing)
+    fst = data.ds[1].rown
+    if length(data) > 1
+        for i = 2:length(data)
+            if fst != data.ds[i].rown
+                error("row names not equal")
+            end
+        end
+    end
+    if isnothing(coln)
+        coln = Vector{String}(undef, length(data))
+        for i = 1:length(data)
+            coln[i] = string(data.ds[i].id)
+        end
+    end
+    mx = hcat([sumrows_(f, i) for i in data.ds]...)
+    contab(mx;
+        rownames = copy(fst),
+        colnames = coln,
+        id       = Dict())
+end
 
 """
     contab(data, row::Symbol, col::Symbol; sort::Union{Nothing, Symbol, AbstractVector{Symbol}} = nothing, id = nothing)
 
-Make contingency table from data using `row` and `col` columns.  
+Make contingency table from data using `row` and `col` columns.
 """
 function contab(data, row::Symbol, col::Symbol; sort::Union{Nothing, Symbol, AbstractVector{Symbol}} = nothing, id = nothing)
     cols = Tables.columns(data)

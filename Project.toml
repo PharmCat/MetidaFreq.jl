@@ -18,9 +18,9 @@ HypothesisTests  = "09f84164-cd44-5f33-b23f-e6b0d136a0d5"
 MetidaBase = "0.3, 0.4, 0.5"
 Tables = "1"
 CategoricalArrays = "0.8, 0.9, 0.10"
-Distributions = "0.20, 0.21, 0.22, 0.23, 0.24, 0.25"
-Roots = "1"
-StatsBase = "0.30, 0.31, 0.32, 0.33"
+Distributions = "0.19, 0.20, 0.21, 0.22, 0.23, 0.24, 0.25"
+Roots = "0.7, 0.8, 1.0, 2"
+StatsBase = "0.27, 0.28, 0.29, 0.30, 0.31, 0.32, 0.33"
 HypothesisTests  = "0.10"
 
 [extras]

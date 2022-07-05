@@ -12,6 +12,30 @@ MetidaFreq.contab
 MetidaFreq.freq
 ```
 
+
+## Contingency tables utilities
+
+### MetidaFreq.addcol
+```@docs
+MetidaFreq.addcol
+```
+
+### MetidaFreq.colreduce
+```@docs
+MetidaFreq.colreduce
+```
+
+### Base.permutedims
+```@docs
+MetidaFreq.permutedims
+```
+
+### MetidaFreq.sumrows
+```@docs
+MetidaFreq.sumrows
+```
+
+
 ## Confidence Intervals
 
 ### MetidaFreq.confint

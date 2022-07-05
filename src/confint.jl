@@ -106,10 +106,10 @@ end
 """
 function orci(contab::ConTab; level = 0.95, method = :default)
     if !(size(contab.tab, 1) == size(contab.tab, 2) == 2) throw(ArgumentError("CI only for 2 X 2 tables.")) end
-    x1 = contab.tab[1,1]
-    n1 = x1 + contab.tab[1,2]
-    x2 = contab.tab[2,1]
-    n2 = x2 + contab.tab[2,2]
+    x1 = contab.tab[1, 1]
+    n1 = x1 + contab.tab[1, 2]
+    x2 = contab.tab[2, 1]
+    n2 = x2 + contab.tab[2, 2]
     orci(x1, n1, x2, n2; level = level, method = method)
 end
 """
@@ -149,10 +149,10 @@ end
 function rrci(contab::ConTab; level = 0.95, method = :default)
     if !(size(contab.tab, 1) == size(contab.tab, 2) == 2) throw(ArgumentError("CI only for 2 X 2 tables.")) end
     alpha    = 1 - level
-    x1 = contab.tab[1,1]
-    n1 = x1 + contab.tab[1,2]
-    x2 = contab.tab[2,1]
-    n2 = x2 + contab.tab[2,2]
+    x1 = contab.tab[1, 1]
+    n1 = x1 + contab.tab[1, 2]
+    x2 = contab.tab[2, 1]
+    n2 = x2 + contab.tab[2, 2]
     rrci(x1, n1, x2, n2; level = level, method = method)
 end
 
@@ -209,15 +209,15 @@ function propci(contab::ConTab; level = 0.95, method = :default)
     if size(contab, 1) > 1
         v = Vector{Tuple{Float64, Float64}}(undef, size(contab, 1))
         for i = 1:size(contab, 1)
-            x = contab.tab[i,1]
-            n = x + contab.tab[i,2]
+            x = contab.tab[i, 1]
+            n = x + contab.tab[i, 2]
             #println(x, " : ", n)
             v[i] = propci(x, n; level = level, method = method)
         end
         return v
     else
-        x = contab.tab[1,1]
-        n = x + contab.tab[1,2]
+        x = contab.tab[1, 1]
+        n = x + contab.tab[1, 2]
         return propci(x, n; level = level, method = method)
     end
 end
@@ -557,17 +557,18 @@ end
 # FM Score interval
 # Farrington, C. P., & Manning, G. (1990). Test statistics and sample size formulae for comparative binomial trials with null hypothesis of non-zero risk difference or non-unity relative risk. Statistics in Medicine, 9(12), 1447–1454. doi:10.1002/sim.4780091208
 function ci_rr_fm(x1, n1, x2, n2, alpha; atol::Float64 = 1E-8)
-    z²        = quantile(Chisq(1), 1 - alpha)
-    fmnrr(x) = mle_fm_rr_z_val(x, x1, n1, x2, n2) - z²
+    lower, upper = ci_rr_li(x1, n1, x2, n2, alpha)
+    z²           = quantile(Chisq(1), 1 - alpha)
+    fmnrr(x)     = mle_fm_rr_z_val(x, x1, n1, x2, n2) - z²
     if (x1==0 && x2==0) || (x1==n1 && x2==n2)
         return  0.0, Inf
     elseif x1==0 || x2==n2
-        return 0.0, find_zero(fmnrr, atol, atol=atol)
+        return 0.0, find_zero(fmnrr, upper, atol=atol)
     elseif x1==n1 || x2 == 0
-        return find_zero(fmnrr, atol, atol=atol), Inf
+        return find_zero(fmnrr, lower, atol=atol), Inf
     else
-        est = (x1 / n1) / (x2 / n2)
-        return find_zero(fmnrr, atol, atol=atol), find_zero(fmnrr, est + atol, atol=atol)
+        #est = (x1 / n1) / (x2 / n2)
+        return find_zero(fmnrr, lower, atol=atol), find_zero(fmnrr, upper, atol=atol)
     end
 end
 # Crude log interval
@@ -635,22 +636,22 @@ function ci_prop_cp(x, n, alpha)
         ul = 1.0
         ll = (alpha / 2)^(1 / n)
     else
-        ll = 1/(1+(n-x+1)/(x*quantile(FDist(2*x, 2*(n-x+1)), alpha/2)))
-        ul = 1/(1+(n-x) / ((x+1)*quantile(FDist(2*(x+1), 2*(n-x)), 1-alpha/2)))
+        ll = 1/(1 + (n - x + 1)/(x * quantile(FDist(2 * x, 2 * (n - x + 1)), alpha / 2)))
+        ul = 1/(1 + (n - x) / ((x + 1) * quantile(FDist(2 * (x + 1), 2 * (n - x)), 1 - alpha / 2)))
     end
     return ll, ul
 end
 # Blaker CI
 # Blaker, H. (2000). Confidence curves and improved exact confidence intervals for discrete distributions,Canadian Journal of Statistics28 (4), 783–798
 function ci_prop_blaker(x, n, alpha; atol::Float64 = 1E-8)
-    lower = 0; upper = 1;
+    lower = 0.; upper = 1.;
     fx(p) =  acceptbin(x, n, p) - alpha
     if n != 0
-        lower = quantile(Beta(x, n-x+1), alpha/2)
+        lower = quantile(Beta(x, n - x + 1), alpha / 2)
         lower = find_zero(fx, lower, atol=atol)
     end
     if x != n
-        upper = quantile(Beta(x+1, n-x), 1-alpha/2)
+        upper = quantile(Beta(x + 1, n - x), 1 - alpha / 2)
         upper = find_zero(fx, upper, atol=atol)
     end
     return lower,upper
@@ -666,15 +667,15 @@ end
 # SOC  Second-Order corrected
 # T. Tony Cai One-sided confdence intervals in discrete distributions doi:10.1016/j.jspi.2004.01.00
 function ci_prop_soc(x, n, alpha)
-    p  = x/n
-    k  = quantile(Normal(), 1-alpha/2)
+    p  = x / n
+    k  = quantile(Normal(), 1 - alpha / 2)
     k2 = k^2
-    η  = k2/3+1/6
-    γ1 = -(k2*13/18+17/18)
-    γ2 = k2/18+7/36
-    m  = (x+η)/(n+2*η)
-    b  = k*sqrt(p*(1-p)+(γ1*p*(1-p)+γ2)/n)/sqrt(n)
-    return m-b, m+b
+    η  = k2 / 3 + 1 / 6
+    γ1 = -(k2 * 13 / 18 + 17 / 18)
+    γ2 = k2 / 18 + 7 / 36
+    m  = (x + η) / (n + 2 * η)
+    b  = k * sqrt(p * (1 - p) + (γ1 * p *(1 - p) + γ2) / n) / sqrt(n)
+    return m - b, m + b
 end
 # Arcsine
 function ci_prop_arc(x, n, alpha)
@@ -702,7 +703,7 @@ function ci_prop_ac(x, n, alpha)
     n = n + z^2
     est = (x + z ^ 2 / 2) / n
     se = sqrt(est * (1 - est) / n)
-    return (est-z*se, est+z*se)
+    return (est - z * se, est + z * se)
 end
 
 # Jeffreys interval
@@ -724,7 +725,7 @@ function ci_prop_goodman(v, alpha::T2) where T2
     ci  = Vector{Tuple{Float64, Float64}}(undef, k)
     d   = 2 * (chi + s)
      @inbounds @simd for i = 1:k
-        ci[i] = ( (chi + 2v[i] - sqrt(chi*chi + 4v[i]*chi*(1.0 - v[i]/s))) / d , (chi + 2v[i] + sqrt(chi*chi + 4v[i]*chi*(1.0 - v[i]/s))) / d )
+        ci[i] = ( (chi + 2v[i] - sqrt(chi * chi + 4v[i] * chi*(1.0 - v[i] / s))) / d , (chi + 2v[i] + sqrt(chi * chi + 4v[i] * chi * (1.0 - v[i] / s))) / d )
     end
     ci
 end
