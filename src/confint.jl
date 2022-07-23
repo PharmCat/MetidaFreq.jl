@@ -557,27 +557,27 @@ end
 # FM Score interval
 # Farrington, C. P., & Manning, G. (1990). Test statistics and sample size formulae for comparative binomial trials with null hypothesis of non-zero risk difference or non-unity relative risk. Statistics in Medicine, 9(12), 1447–1454. doi:10.1002/sim.4780091208
 function ci_rr_fm(x1, n1, x2, n2, alpha; atol::Float64 = 1E-8)
-    lower, upper = ci_rr_li(x1, n1, x2, n2, alpha)
+    lower, upper = ci_rr_cli(x1, n1, x2, n2, alpha, 1/4)
     z²           = quantile(Chisq(1), 1 - alpha)
     fmnrr(x)     = mle_fm_rr_z_val(x, x1, n1, x2, n2) - z²
-    if (x1==0 && x2==0) || (x1==n1 && x2==n2)
+    if (x1 == 0 && x2 == 0) || (x1 == n1 && x2 == n2)
         return  0.0, Inf
-    elseif x1==0 || x2==n2
-        return 0.0, find_zero(fmnrr, upper, atol=atol)
-    elseif x1==n1 || x2 == 0
-        return find_zero(fmnrr, lower, atol=atol), Inf
+    elseif x1 == 0 || x2 == n2
+        return 0.0, find_zero(fmnrr, upper)
+    elseif x1 == n1 || x2 == 0
+        return find_zero(fmnrr, lower), Inf
     else
         #est = (x1 / n1) / (x2 / n2)
-        return find_zero(fmnrr, lower, atol=atol), find_zero(fmnrr, upper, atol=atol)
+        return find_zero(fmnrr, lower), find_zero(fmnrr, upper)
     end
 end
 # Crude log interval
 # Gart, JJand Nam, J (1988): Approximate interval estimation of the ratio of binomial parameters: Areview and corrections for skewness. Biometrics 44, 323-338.
-function ci_rr_cli(x1, n1, x2, n2, alpha)
-    x1I       = x1 + 1/2
-    x2I       = x2 + 1/2
-    n1I       = n1 + 1/2
-    n2I       = n2 + 1/2
+function ci_rr_cli(x1, n1, x2, n2, alpha, adj = 1/2)
+    x1I       = x1 + adj
+    x2I       = x2 + adj
+    n1I       = n1 + adj
+    n2I       = n2 + adj
     estI      = log((x1I / n1I) / (x2I / n2I))
     se        = sqrt(1 / x2I + 1 / x1I - 1 / n2I - 1 / n1I)
     est       = (x1 / n1) / (x2 / n2)
