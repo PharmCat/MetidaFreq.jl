@@ -35,7 +35,6 @@ MetidaFreq.permutedims
 MetidaFreq.sumrows
 ```
 
-
 ## Confidence Intervals
 
 ### MetidaFreq.confint
