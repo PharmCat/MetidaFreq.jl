@@ -57,9 +57,11 @@ end
 
 ConTab 2X2:
 
+```
 A | B
 --|--
 C | D
+```
 
 Difference: A / (A + B) - C / (C + D)
 """
@@ -75,10 +77,13 @@ end
 """
     orci(x1, n1, x2, n2; level = 0.95, method = :default)
 
-- `:mn`
-- `:woolf`
-- `:awoolf`
-- `:mover`
+- `:mn` - MN Score; Miettinen O. S., Nurminen M. (1985) Comparative analysis of two rates.Statistics in Medicine 4,213–226
+- `:fm` | `:mee` - FM - same as MN Score, but not multiplied on `(n1 + n2) * (n1 + n2 - 1)` - Mee RW (1984) Confidence bounds for the difference between two probabilities,Biometrics 40:1175-1176;
+Farrington, C. P. and Manning, G. (1990), “Test Statistics and Sample Size Formulae for Comparative Binomial Trials with Null Hypothesis of Non-zero Risk Difference or Non-unity Relative Risk,” Statistics in Medicine, 9, 1447–1454
+- `:woolf` - Woolf logit; Woolf, B. (1955). On estimating the relation between blood group and disease. Annals of human genetics, 19(4):251-253.
+- `:awoolf` - Adjusted Woolf interval (Gart adjusted logit); # Gart, J. J. (1966). Alternative analyses of contingency tables. Journal of the Royal Statistical Society. Series B (Methodological), 28:164-179;
+Lawson, R (2005):Smallsample confidence intervals for the odds ratio.  Communication in Statistics Simulation andComputation, 33, 1095-1113.
+- `:mover` - Method of variance estimates recovery (MOVER); Donner, A. and Zou, G. (2012). Closed-form confidence intervals for functions of the normal mean and standard deviation. Statistical Methods in Medical Research, 21(4):347-359.
 """
 function orci(x1, n1, x2, n2; level = 0.95, method = :default)
     alpha    = 1 - level
@@ -99,10 +104,14 @@ end
 """
     orci(contab::ConTab; level = 0.95, method = :default)
 
-- `:mn`
-- `:woolf`
-- `:awoolf`
-- `:mover`
+```
+A | B
+--|--
+C | D
+```
+
+Odd ratio: (A / B) / (C / D)
+
 """
 function orci(contab::ConTab; level = 0.95, method = :default)
     if !(size(contab.tab, 1) == size(contab.tab, 2) == 2) throw(ArgumentError("CI only for 2 X 2 tables.")) end
@@ -140,11 +149,13 @@ end
 """
     rrci(contab::ConTab; level = 0.95, method = :default)
 
-- `:mn`
-- `:fm` | `:mee`
-- `:cli`
-- `:li` | `:wald`
-- `:mover`
+```
+A | B
+--|--
+C | D
+```
+
+Risk ratio: (A / (A + B)) / (C / (C + D)
 """
 function rrci(contab::ConTab; level = 0.95, method = :default)
     if !(size(contab.tab, 1) == size(contab.tab, 2) == 2) throw(ArgumentError("CI only for 2 X 2 tables.")) end
@@ -306,12 +317,12 @@ function ci_diff_mn(x1, n1, x2, n2, alpha; atol::Float64 = 1E-8)
         ul = ucis
         uu = 1.0 - eps()
     end
-    lci = find_zero(fmnd, (ll, lu), atol = atol)
-    uci = find_zero(fmnd, (ul, uu), atol = atol)
+    lci = find_zero(fmnd, (ll, lu))
+    uci = find_zero(fmnd, (ul, uu))
     return lci, uci
 end
 # FM / MEE
-# Mee RW (1984) Confidence bounds for the difference between two probabilities,Biometrics40:1175-1176
+# Mee RW (1984) Confidence bounds for the difference between two probabilities, Biometrics40:1175-1176
 # MN - no correction
 function ci_diff_fm(x1, n1, x2, n2, alpha; atol::Float64 = 1E-8)
     lcis, ucis = ci_diff_nhs_cc(x1, n1, x2, n2, alpha)
@@ -443,7 +454,7 @@ end
     mle_fm_or_z_val(φ, x1, n1, x2, n2) / (n1 + n2) * (n1 + n2 - 1)
 end
 ################################################################################
-# Miettinen O. S., Nurminen M. (1985) Comparative analysis of two rates.Statistics in Medicine4,213–226
+# Miettinen O. S., Nurminen M. (1985) Comparative analysis of two rates.Statistics in Medicine 4,213–226
 # MN Score
 function ci_or_mn(x1, n1, x2, n2, alpha; atol::Float64 = 1E-8)
     z²        = quantile(Chisq(1), 1 - alpha)
@@ -451,27 +462,30 @@ function ci_or_mn(x1, n1, x2, n2, alpha; atol::Float64 = 1E-8)
     if (x1== 0 && x2 == 0) || (x1 == n1 && x2 == n2)
         return 0.0, Inf
     elseif x1==0 || x2 == n2
-        return 0.0, find_zero(fmnor, atol, atol = atol)
+        return 0.0, find_zero(fmnor, atol)
     elseif x1 == n1 || x2 == 0
-        return find_zero(fmnor, atol, atol = atol), Inf
+        return find_zero(fmnor, atol), Inf
     else
         est  = (x1 / (n1 - x1)) / (x2 / (n2 - x2))
-        return find_zero(fmnor, atol, atol = atol), find_zero(fmnor, est + atol, atol = atol)
+        return find_zero(fmnor, atol), find_zero(fmnor, est + atol)
     end
 end
 # FM Score
+# Mee RW (1984) Confidence bounds for the difference between two probabilities,Biometrics40:1175-1176
+# Farrington, C. P. and Manning, G. (1990), “Test Statistics and Sample Size Formulae for Comparative Binomial Trials with Null Hypothesis of Non-zero Risk Difference or Non-unity Relative Risk,” Statistics in Medicine, 9, 1447–1454
+
 function ci_or_fm(x1, n1, x2, n2, alpha; atol::Float64 = 1E-8)
     z²        = quantile(Chisq(1), 1 - alpha)
     fmnor(x) = mle_fm_or_z_val(x, x1, n1, x2, n2) - z²
     if (x1== 0 && x2 == 0) || (x1 == n1 && x2 == n2)
         return 0.0, Inf
     elseif x1==0 || x2 == n2
-        return 0.0, find_zero(fmnor, atol, atol = atol)
+        return 0.0, find_zero(fmnor, atol)
     elseif x1 == n1 || x2 == 0
-        return find_zero(fmnor, atol, atol = atol), Inf
+        return find_zero(fmnor, atol), Inf
     else
         est  = (x1 / (n1 - x1)) / (x2 / (n2 - x2))
-        return find_zero(fmnor, atol, atol = atol), find_zero(fmnor, est + atol, atol = atol)
+        return find_zero(fmnor, atol), find_zero(fmnor, est + atol)
     end
 end
 # Woolf logit
