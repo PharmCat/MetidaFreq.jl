@@ -77,13 +77,22 @@ end
 """
     orci(x1, n1, x2, n2; level = 0.95, method = :default)
 
-- `:mn` - MN Score; Miettinen O. S., Nurminen M. (1985) Comparative analysis of two rates.Statistics in Medicine 4,213–226
-- `:fm` | `:mee` - FM - same as MN Score, but not multiplied on `(n1 + n2) * (n1 + n2 - 1)` - Mee RW (1984) Confidence bounds for the difference between two probabilities,Biometrics 40:1175-1176;
-Farrington, C. P. and Manning, G. (1990), “Test Statistics and Sample Size Formulae for Comparative Binomial Trials with Null Hypothesis of Non-zero Risk Difference or Non-unity Relative Risk,” Statistics in Medicine, 9, 1447–1454
-- `:woolf` - Woolf logit; Woolf, B. (1955). On estimating the relation between blood group and disease. Annals of human genetics, 19(4):251-253.
-- `:awoolf` - Adjusted Woolf interval (Gart adjusted logit); # Gart, J. J. (1966). Alternative analyses of contingency tables. Journal of the Royal Statistical Society. Series B (Methodological), 28:164-179;
-Lawson, R (2005):Smallsample confidence intervals for the odds ratio.  Communication in Statistics Simulation andComputation, 33, 1095-1113.
-- `:mover` - Method of variance estimates recovery (MOVER); Donner, A. and Zou, G. (2012). Closed-form confidence intervals for functions of the normal mean and standard deviation. Statistical Methods in Medical Research, 21(4):347-359.
+- `:mn` - MN Score (Miettinen&Nurminen, 1985);
+- `:fm` | `:mee` - FM (same as MN Score, but not multiplied on `(n1 + n2) * (n1 + n2 - 1)`) (Mee RW, 1984; Farrington&Manning, 1990);
+- `:woolf` - Woolf logit (Woolf, 1955);
+- `:awoolf` - Adjusted Woolf interval (Gart adjusted logit) (Gart, 1966; Lawson, 2005);
+- `:mover` - Method of variance estimates recovery (MOVER) (Donner&Zou, 2012);
+
+Reference:
+
+* Miettinen O. S., Nurminen M. (1985) Comparative analysis of two rates.Statistics in Medicine 4,213–226;
+* Mee RW (1984) Confidence bounds for the difference between two probabilities,Biometrics 40:1175-1176;
+* Farrington, C. P. and Manning, G. (1990), “Test Statistics and Sample Size Formulae for Comparative Binomial Trials with Null Hypothesis of Non-zero Risk Difference or Non-unity Relative Risk,” Statistics in Medicine, 9, 1447–1454;
+* Woolf, B. (1955). On estimating the relation between blood group and disease. Annals of human genetics, 19(4):251-253;
+* Gart, J. J. (1966). Alternative analyses of contingency tables. Journal of the Royal Statistical Society. Series B (Methodological), 28:164-179;
+* Lawson, R (2005). Smallsample confidence intervals for the odds ratio.  Communication in Statistics Simulation and Computation, 33, 1095-1113;
+* Donner, A. and Zou, G. (2012). Closed-form confidence intervals for functions of the normal mean and standard deviation. Statistical Methods in Medical Research, 21(4):347-359.
+
 """
 function orci(x1, n1, x2, n2; level = 0.95, method = :default)
     alpha    = 1 - level
@@ -124,11 +133,20 @@ end
 """
     rrci(x1, n1, x2, n2; level = 0.95, method = :default)
 
-- `:mn`
-- `:fm` | `:mee`
-- `:cli`
-- `:li` | `:wald`
-- `:mover`
+- `:mn` - Miettinen-Nurminen Score interval (Miettinen&Nurminen, 1985);
+- `:fm` | `:mee` - FM Score interval (Mee RW, 1984; Farrington&Manning, 1990);
+- `:cli` - Crude log interval, Gart (Gart&Nam, 1988);
+- `:li` | `:wald` - Log interval / Katz / Wald interval (Katz et al, 1978);
+- `:mover` - Method of variance estimates recovery (Donner&Zou, 2012);
+
+Reference:
+
+* Miettinen, O. and Nurminen, M. (1985), Comparative analysis of two rates. Statist. Med., 4: 213-226. doi:10.1002/sim.4780040211;
+* Mee RW (1984) Confidence bounds for the difference between two probabilities,Biometrics 40:1175-1176;
+* Farrington, C. P., & Manning, G. (1990). Test statistics and sample size formulae for comparative binomial trials with null hypothesis of non-zero risk difference or non-unity relative risk. Statistics in Medicine, 9(12), 1447–1454. doi:10.1002/sim.4780091208;
+* Gart, JJ and Nam, J (1988): Approximate interval estimation of the ratio of binomial parameters: Areview and corrections for skewness. Biometrics 44, 323-338;
+* Katz D, Baptista J, Azen SP and Pike MC. Obtaining confidence intervals for the risk ratio in cohort studies. Biometrics 1978; 34: 469–474;
+* Donner, A. and Zou, G. (2012). Closed-form confidence intervals for functions of the normal mean and standard deviation. Statistical Methods in Medical Research, 21(4):347-359.
 """
 function rrci(x1, n1, x2, n2; level = 0.95, method = :default)
     alpha    = 1 - level
@@ -172,16 +190,23 @@ end
 
 `method`:
 
-- `:wilson` | `:default` - Wilson's confidence interval (CI) for a single proportion (wilson score);
+- `:wilson` | `:default` - Wilson's confidence interval (CI) for a single proportion (wilson score) (Wilson, 1927);
 - `:wilsoncc` - Wilson's CI with continuity correction (CC);
-- `:cp` - Clopper-Pearson exact CI;
-- `:blaker` - Blaker exact CI for discrete distributions;
+- `:cp` - Clopper-Pearson exact CI (Clopper&Pearson, 1934);
+- `:blaker` - Blaker exact CI for discrete distributions (Blaker, 2000);
 - `:soc` - SOC: Second-Order corrected CI;
 - `:arc` - Arcsine CI;
 - `:wald` - Wald CI without CC;
 - `:waldcc` - Wald CI with CC;
-- `:ac`
-- `:jeffrey`
+- `:ac` - Agresti-Coull;
+- `:jeffrey` - Jeffreys interval.
+
+Reference:
+
+* Wilson, E.B. (1927) Probable inference, the law of succession, and statistical inference J. Amer.Stat. Assoc 22, 209–212;
+* Clopper, C. and Pearson, E.S. (1934) The use of confidence or fiducial limits illustrated in the caseof the binomial.Biometrika26, 404–413;
+* Blaker, H. (2000). Confidence curves and improved exact confidence intervals for discrete distributions, Canadian Journal of Statistics 28 (4), 783–798;
+
 """
 function propci(x::Int, n::Int; level = 0.95, method = :default)
     if  x > n throw(ArgumentError("x > n")) end
