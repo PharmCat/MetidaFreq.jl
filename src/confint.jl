@@ -292,6 +292,7 @@ function ci_diff_mn(x1, n1, x2, n2, alpha; atol::Float64 = 1E-8)
     est      = p1 - p2
     z²        = quantile(Chisq(1), 1 - alpha)
     fmnd(x)  = mn_diff_z_val(p1, n1, p2, n2, est, x) - z²
+    #=
     if fmnd(lcis) * fmnd(est - eps()) < 0.0
         ll = lcis
         lu = est - eps()
@@ -306,8 +307,9 @@ function ci_diff_mn(x1, n1, x2, n2, alpha; atol::Float64 = 1E-8)
         ul = ucis
         uu = 1.0 - eps()
     end
-    lci = find_zero(fmnd, (ll, lu), atol = atol)
-    uci = find_zero(fmnd, (ul, uu), atol = atol)
+    =#
+    lci = find_zero(fmnd, lcis)
+    uci = find_zero(fmnd, ucis)
     return lci, uci
 end
 # FM / MEE
@@ -320,6 +322,7 @@ function ci_diff_fm(x1, n1, x2, n2, alpha; atol::Float64 = 1E-8)
     est      = p1 - p2
     z²        = quantile(Chisq(1), 1 - alpha)
     fmnd(x)  = mn_fm_diff_z_val(p1, n1, p2, n2, est, x) - z²
+    #=
     if fmnd(lcis) * fmnd(est - eps()) < 0.0
         ll = lcis
         lu = est - eps()
@@ -334,8 +337,9 @@ function ci_diff_fm(x1, n1, x2, n2, alpha; atol::Float64 = 1E-8)
         ul = ucis
         uu = 1.0 - eps()
     end
-    lci = find_zero(fmnd, (ll, lu), atol = atol)
-    uci = find_zero(fmnd, (ul, uu), atol = atol)
+    =#
+    lci = find_zero(fmnd, lcis)
+    uci = find_zero(fmnd, ucis)
     return  lci, uci
 end
 # Wald
@@ -448,30 +452,32 @@ end
 function ci_or_mn(x1, n1, x2, n2, alpha; atol::Float64 = 1E-8)
     z²        = quantile(Chisq(1), 1 - alpha)
     fmnor(x) = mle_or_z_val(x, x1, n1, x2, n2) - z²
+    lci, uci = ci_or_awoolf(x1, n1, x2, n2, alpha)
     if (x1== 0 && x2 == 0) || (x1 == n1 && x2 == n2)
         return 0.0, Inf
     elseif x1==0 || x2 == n2
-        return 0.0, find_zero(fmnor, atol, atol = atol)
+        return 0.0, find_zero(fmnor, uci)
     elseif x1 == n1 || x2 == 0
-        return find_zero(fmnor, atol, atol = atol), Inf
+        return find_zero(fmnor, lci), Inf
     else
         est  = (x1 / (n1 - x1)) / (x2 / (n2 - x2))
-        return find_zero(fmnor, atol, atol = atol), find_zero(fmnor, est + atol, atol = atol)
+        return find_zero(fmnor, lci), find_zero(fmnor, uci)
     end
 end
 # FM Score
 function ci_or_fm(x1, n1, x2, n2, alpha; atol::Float64 = 1E-8)
     z²        = quantile(Chisq(1), 1 - alpha)
     fmnor(x) = mle_fm_or_z_val(x, x1, n1, x2, n2) - z²
+    lci, uci = ci_or_awoolf(x1, n1, x2, n2, alpha)
     if (x1== 0 && x2 == 0) || (x1 == n1 && x2 == n2)
         return 0.0, Inf
     elseif x1==0 || x2 == n2
-        return 0.0, find_zero(fmnor, atol, atol = atol)
+        return 0.0, find_zero(fmnor, uci)
     elseif x1 == n1 || x2 == 0
-        return find_zero(fmnor, atol, atol = atol), Inf
+        return find_zero(fmnor, lci), Inf
     else
         est  = (x1 / (n1 - x1)) / (x2 / (n2 - x2))
-        return find_zero(fmnor, atol, atol = atol), find_zero(fmnor, est + atol, atol = atol)
+        return find_zero(fmnor, lci), find_zero(fmnor, uci)
     end
 end
 # Woolf logit
@@ -541,34 +547,35 @@ end
 # Miettinen-Nurminen Score interval
 # Miettinen, O. and Nurminen, M. (1985), Comparative analysis of two rates. Statist. Med., 4: 213-226. doi:10.1002/sim.4780040211
 function ci_rr_mn(x1, n1, x2, n2, alpha; atol::Float64 = 1E-8)
+    lci, uci = ci_rr_cli(x1, n1, x2, n2, alpha, 1/4)
     z²        = quantile(Chisq(1), 1 - alpha)
     fmnrr(x) = mle_rr_z_val(x, x1, n1, x2, n2) - z²
-    if (x1==0 && x2==0) || (x1==n1 && x2==n2)
+    if (x1 == 0 && x2 == 0) || (x1==n1 && x2==n2)
         return  0.0, Inf
-    elseif x1==0 || x2==n2
-        return 0.0, find_zero(fmnrr, atol, atol=atol)
-    elseif x1==n1 || x2 == 0
-        return find_zero(fmnrr, atol, atol=atol), Inf
+    elseif x1 == 0 || x2 == n2
+        return 0.0, find_zero(fmnrr, uci)
+    elseif x1 == n1 || x2 == 0
+        return find_zero(fmnrr, lci), Inf
     else
         est = (x1 / n1) / (x2 / n2)
-        return find_zero(fmnrr, atol, atol=atol), find_zero(fmnrr, est + atol, atol=atol)
+        return find_zero(fmnrr, lci), find_zero(fmnrr, uci)
     end
 end
 # FM Score interval
 # Farrington, C. P., & Manning, G. (1990). Test statistics and sample size formulae for comparative binomial trials with null hypothesis of non-zero risk difference or non-unity relative risk. Statistics in Medicine, 9(12), 1447–1454. doi:10.1002/sim.4780091208
 function ci_rr_fm(x1, n1, x2, n2, alpha; atol::Float64 = 1E-8)
-    lower, upper = ci_rr_cli(x1, n1, x2, n2, alpha, 1/4)
+    lci, uci = ci_rr_cli(x1, n1, x2, n2, alpha, 1/4)
     z²           = quantile(Chisq(1), 1 - alpha)
     fmnrr(x)     = mle_fm_rr_z_val(x, x1, n1, x2, n2) - z²
     if (x1 == 0 && x2 == 0) || (x1 == n1 && x2 == n2)
         return  0.0, Inf
     elseif x1 == 0 || x2 == n2
-        return 0.0, find_zero(fmnrr, upper)
+        return 0.0, find_zero(fmnrr, uci)
     elseif x1 == n1 || x2 == 0
-        return find_zero(fmnrr, lower), Inf
+        return find_zero(fmnrr, lci), Inf
     else
         #est = (x1 / n1) / (x2 / n2)
-        return find_zero(fmnrr, lower), find_zero(fmnrr, upper)
+        return find_zero(fmnrr, lci), find_zero(fmnrr, uci)
     end
 end
 # Crude log interval
@@ -648,11 +655,11 @@ function ci_prop_blaker(x, n, alpha; atol::Float64 = 1E-8)
     fx(p) =  acceptbin(x, n, p) - alpha
     if n != 0
         lower = quantile(Beta(x, n - x + 1), alpha / 2)
-        lower = find_zero(fx, lower, atol=atol)
+        lower = find_zero(fx, lower)
     end
     if x != n
         upper = quantile(Beta(x + 1, n - x), 1 - alpha / 2)
-        upper = find_zero(fx, upper, atol=atol)
+        upper = find_zero(fx, upper)
     end
     return lower,upper
 end
