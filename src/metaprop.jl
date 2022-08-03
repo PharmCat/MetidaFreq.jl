@@ -37,6 +37,7 @@ function metaprop(d::DataSet, metric; adj = 0)
     elseif metric == :rr
         cty = contabrr.(d.ds; adj = adj)
     else
+        error("metric unknown")
     end
     y   = getindex.(cty, 1)
     var = getindex.(cty, 2)
@@ -83,6 +84,7 @@ end
     metaproprandom(mp; tau = :default)
 
 tau - τ² calculation method:
+
 - `:dl` DerSimonian-Laird
 - `:ho`
 - `:hm` Hartung and Makambi
@@ -115,7 +117,7 @@ function metaproprandom(mp; tau = :default)
     rwts = 1 ./ (mp.var .+ τ²)
     est     = sum(rwts .* mp.y) / sum(rwts)
     var     = 1 / sum(rwts) #?
-    i²      = (τ² / (τ² + (k-1)/s)) * 100
+    i²      = (τ² / (τ² + (k - 1) / s)) * 100
     MetaPropResult{:random}(mp, rwts, est, var, chisq, q, i², τ²)
 end
 
@@ -181,4 +183,42 @@ function contabrr(contab; adj = 0)
     pt = a / (a + b)
     pc = c / (c + d)
     return log(pt / pc), 1 / a - 1 / (a + b) + 1 / c - 1 /(c + d)
+end
+
+
+function Base.show(io::IO, mp::MetaProp)
+    println(io, "  Meta-proportion:")
+    println(io, "  Tables: $(length(mp.data))")
+    println(io, "  Metric: $(mp.metric)")
+    println(io, "  Metric vector: $(mp.y)")
+    print(io, "  Metric variance: $(mp.var)")
+end
+struct MetaPropResult{Symbol}
+    data::MetaProp
+    wts::Vector{Float64}
+    est::Float64
+    var::Float64
+    chisq::Float64
+    hetq::Float64
+    heti::Float64
+    hettau::Float64
+end
+
+function Base.show(io::IO, mpr::MetaPropResult{:fixed})
+    println(io, "  Meta-proportion fixed-effect result:")
+    println(io, "  Estimate: $(mpr.est)")
+    println(io, "  Variance: $(mpr.var)")
+    println(io, "  Chi²: $(mpr.chisq)")
+    println(io, "  Q: $(mpr.hetq)")
+    print(io, "  I²: $(mpr.heti)")
+end
+
+function Base.show(io::IO, mpr::MetaPropResult{:random})
+    println(io, "  Meta-proportion random-effect result:")
+    println(io, "  Estimate: $(mpr.est)")
+    println(io, "  Variance: $(mpr.var)")
+    println(io, "  Chi²: $(mpr.chisq)")
+    println(io, "  Q: $(mpr.hetq)")
+    println(io, "  I²: $(mpr.heti)")
+    print(io, "  τ²: $(mpr.hettau)")
 end

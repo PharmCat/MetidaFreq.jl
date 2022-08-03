@@ -307,7 +307,7 @@ end
     mp = MetidaFreq.metaprop(mds, :rr)
     mp = MetidaFreq.metaprop(mds, :or)
     mp = MetidaFreq.metaprop(mds, :diff)
-
+    show(io, mp)
     # Fixed effect MH (diff)
     mp  = MetidaFreq.metaprop(mds, :diff)
     mpf = MetidaFreq.metapropfixed(mp; weights = :mh)
@@ -315,7 +315,7 @@ end
     @test mpf.var ≈ 0.0028728509817330943 atol=1E-6
     ci = confint(mpf; level = 0.95)
     @test collect(ci)  ≈ [0.1146368241999458, 0.32474097688921] atol=1E-6
-
+    show(io, mpf)
     # Fixed effect IV (diff)
     mp  = MetidaFreq.metaprop(mds, :diff)
     mpf = MetidaFreq.metapropfixed(mp; weights = :iv)
@@ -326,7 +326,7 @@ end
     mpf = MetidaFreq.metaproprandom(mp; tau = :ho)
     mpf = MetidaFreq.metaproprandom(mp; tau = :hm)
     mpf = MetidaFreq.metaproprandom(mp; tau = :sj)
-
+    show(io, mpf)
 end
 
 @testset "  Goodman CI                                               " begin

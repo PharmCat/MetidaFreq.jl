@@ -10,7 +10,7 @@ module MetidaFreq
 using Tables, CategoricalArrays, Distributions, Roots, StatsBase
 
 import HypothesisTests
-
+import StatsBase: confint
 import MetidaBase: AbstractData, AbstractIdData, DataSet, Proportion, PrettyTables
 import HypothesisTests: ChisqTest, MultinomialLRTest, FisherExactTest
 import Base: ht_keyindex, size, show, permutedims

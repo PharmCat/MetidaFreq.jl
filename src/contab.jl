@@ -258,6 +258,22 @@ function contab_(data::NTuple{n, AbstractCategoricalVector}) where n
     reshape(a, dims...), getinvindex.(data)
 end
 
+"""
+    dropzeros!(ds::DataSet{<:ConTab})
+
+Drop tables from dataset if no observation.
+"""
+function dropzeros!(ds::DataSet{<:ConTab})
+    inds = Int[]
+    for i in 1:length(ds)
+        if sum(ds[i].tab) == 0 push!(inds, i) end
+    end
+    if length(inds) > 0
+        deleteat!(ds.ds, inds)
+    end
+    ds
+end
+
 function Base.size(contab::ConTab)
     size(contab.tab)
 end
@@ -272,5 +288,11 @@ function Base.show(io::IO, contab::ConTab)
         for (k,v) in contab.id
             print(io, "$k => $v; ")
         end
+    end
+end
+
+function Base.show(io::IO, ds::DataSet{<:ConTab})
+    for i in 1:length(ds)
+        println(io, ds[i])
     end
 end

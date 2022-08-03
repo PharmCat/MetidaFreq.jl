@@ -295,6 +295,9 @@ function mpropci(contab::ConTab; level = 0.95, method = :default)
     end
 end
 
+function StatsBase.confint(contab::ConTab; level = 0.95, method = :default)
+    propci(contab; level = level, method = method)
+end
 ################################################################################
 # Proportion difference CI
 ################################################################################
