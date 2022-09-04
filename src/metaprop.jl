@@ -59,6 +59,7 @@ function metapropfixed(mp; weights = :default)
     varwts    = 1 ./ mp.var
     if weights == :default || weights == :iv
         wts    = varwts
+        var    = 1 / sum(varwts)
     elseif weights == :mh
         if mp.metric == :diff
             wts    = mhwdiff(mp.data)
@@ -67,12 +68,13 @@ function metapropfixed(mp; weights = :default)
         elseif mp.metric == :rr
             wts    = mhwrr(mp.data)
         end
+        var    = 1 / sum(varwts) # CHECK!
+        #var     = (sum(wts .* mp.var) / sum(wts) / length(wts))
     #elseif weights == :peto
     else
         error("weights keyword unknown!")
     end
     k       = length(mp.y)
-    var     = 1 / sum(varwts)
     est     = sum(wts .* mp.y) / sum(wts)
     chisq   = sum(varwts .* (mp.y .^ 2))
     q       = sum(varwts .* ((mp.y .- est) .^ 2))
@@ -86,7 +88,7 @@ end
 tau - τ² calculation method:
 
 - `:dl` DerSimonian-Laird
-- `:ho`
+- `:ho` Hedges - Olkin
 - `:hm` Hartung and Makambi
 - `:sj` Sidik and Jonkman
 
@@ -103,7 +105,7 @@ function metaproprandom(mp; tau = :default)
     s       = sum(wts) - sum(wts .^ 2) / sum(wts)
     if tau == :dl || tau == :default # DerSimonian-Laird
         τ² = max(0, (q - (k - 1)) / s)
-    elseif tau == :ho
+    elseif tau == :ho # Hedges - Olkin
         τ² = max(0, 1 / (k - 1) * sum((mp.y .- mean(mp.y)) .^ 2) - 1 / k * sum(mp.var))
     elseif tau == :hm # Hartung and Makambi
         τ² = q ^ 2 / (2 * (k - 1) + q) / (sum(wts) - sum(wts .^ 2) / sum(wts))
@@ -206,19 +208,20 @@ end
 
 function Base.show(io::IO, mpr::MetaPropResult{:fixed})
     println(io, "  Meta-proportion fixed-effect result:")
-    println(io, "  Estimate: $(mpr.est)")
-    println(io, "  Variance: $(mpr.var)")
-    println(io, "  Chi²: $(mpr.chisq)")
-    println(io, "  Q: $(mpr.hetq)")
-    print(io, "  I²: $(mpr.heti)")
+    println(io, "  Weights (%): $(round.(mpr.wts ./ sum(mpr.wts) .* 100, sigdigits = 6))")
+    println(io, "  Estimate: $(round(mpr.est, sigdigits = 6))")
+    println(io, "  Variance (Std. error): $(round(mpr.var, sigdigits = 6)) ($(round(sqrt(mpr.var), sigdigits = 6)))")
+    println(io, "  Chi²: $(round(mpr.chisq, sigdigits = 6))")
+    println(io, "  Q: $(round(mpr.hetq, sigdigits = 6))")
+    #print(io, "  I²: $(mpr.heti, sigdigits = 6))")
 end
 
 function Base.show(io::IO, mpr::MetaPropResult{:random})
     println(io, "  Meta-proportion random-effect result:")
-    println(io, "  Estimate: $(mpr.est)")
-    println(io, "  Variance: $(mpr.var)")
-    println(io, "  Chi²: $(mpr.chisq)")
-    println(io, "  Q: $(mpr.hetq)")
-    println(io, "  I²: $(mpr.heti)")
-    print(io, "  τ²: $(mpr.hettau)")
+    println(io, "  Estimate: $(round(mpr.est, sigdigits = 6))")
+    println(io, "  Variance: $(round(mpr.var, sigdigits = 6))")
+    println(io, "  Chi²: $(round(mpr.chisq, sigdigits = 6))")
+    println(io, "  Q: $(round(mpr.hetq, sigdigits = 6))")
+    println(io, "  I²: $(round(mpr.heti, sigdigits = 6))")
+    print(io, "  τ²: $(round(mpr.hettau, sigdigits = 6))")
 end

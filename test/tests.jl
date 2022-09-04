@@ -327,6 +327,49 @@ end
     mpf = MetidaFreq.metaproprandom(mp; tau = :hm)
     mpf = MetidaFreq.metaproprandom(mp; tau = :sj)
     show(io, mpf)
+
+
+    pf1 = MetidaFreq.contab([30 70; 40 60])
+    pf2 = MetidaFreq.contab([20 70; 30 60])
+    pf3 = MetidaFreq.contab([30 80; 30 90])
+    mds = MetidaFreq.DataSet([pf1, pf2, pf3])
+    mp  = MetidaFreq.metaprop(mds, :diff)
+    
+    mpf = MetidaFreq.metapropfixed(mp; weights = :iv)
+    @test mpf.est ≈ -0.054583175 atol=1E-6
+    @test sqrt(mpf.var) ≈ 0.036584324 atol=1E-6
+    @test mpf.hetq ≈ 2.962180668 atol=1E-6
+    ci = StatsBase.confint(mpf; level = 0.95)
+    @test ci[1] ≈ -0.126287133 atol=1E-6
+    @test ci[2] ≈  0.017120783 atol=1E-6
+    #mpf.heti
+
+    mpf = MetidaFreq.metapropfixed(mp; weights = :mh)
+
+    #
+    mpf = MetidaFreq.metaproprandom(mp; tau = :dl)
+    @test mpf.est ≈ -0.057406278 atol=1E-6
+    @test sqrt(mpf.var) ≈ 0.044680842 atol=1E-6
+    @test mpf.hetq ≈ 2.962180668 atol=1E-6
+    @test mpf.heti ≈ 32.482173636 atol=1E-6
+    @test mpf.hettau ≈ 0.001949933 atol=1E-6
+
+    mpf = MetidaFreq.metaproprandom(mp; tau = :ho)
+    @test mpf.est ≈ -0.056863933 atol=1E-6
+    @test sqrt(mpf.var) ≈ 0.042684404 atol=1E-6
+    @test mpf.hetq ≈ 2.962180668 atol=1E-6
+    @test mpf.heti ≈ 26.097161948 atol=1E-6
+    @test mpf.hettau ≈ 0.001431282 atol=1E-6
+
+    mpf = MetidaFreq.metaproprandom(mp; tau = :hm)
+
+    mpf = MetidaFreq.metaproprandom(mp; tau = :sj)
+    #@test mpf.est ≈ -0.058065603 atol=1E-6
+    #@test sqrt(mpf.var) ≈ 0.047558623 atol=1E-6
+    #@test mpf.hetq ≈ 2.962180668 atol=1E-6
+    #@test mpf.heti ≈ 40.340569062 atol=1E-6
+    #@test mpf.hettau ≈ 0.002740665 atol=1E-6
+
 end
 
 @testset "  Goodman CI                                               " begin
