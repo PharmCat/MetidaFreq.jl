@@ -313,9 +313,9 @@ end
     mp  = MetidaFreq.metaprop(mds, :diff)
     mpf = MetidaFreq.metapropfixed(mp; weights = :mh)
     @test mpf.est ≈ 0.2196889005445779 atol=1E-6
-    @test mpf.var ≈ 0.0028728509817330943 atol=1E-6
+    @test mpf.var ≈ 0.002912630389616186 atol=1E-6
     ci = confint(mpf; level = 0.95)
-    @test collect(ci)  ≈ [0.1146368241999458, 0.32474097688921] atol=1E-6
+    @test collect(ci)  ≈ [0.11391201412030795, 0.32546578696884787] atol=1E-6
     show(io, mpf)
 
     # Fixed effect IV (diff)
