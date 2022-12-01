@@ -170,10 +170,10 @@ function contab(data, row::Symbol, col::Symbol; sort::Union{Nothing, Symbol, Abs
                 id[j] = c[2+j] => rdict[j][ci[i][j]]
             end
             for k in keys(rdi)
-                rowstr[rdi[k]] = String(k)
+                rowstr[rdi[k]] = string(k)
             end
             for k in keys(cdi)
-                colstr[cdi[k]] = String(k)
+                colstr[cdi[k]] = string(k)
             end
             v[i] = ConTab(Matrix(view(res[1], :, :, ci[i])), rowstr,  colstr, Dict(id))
         end

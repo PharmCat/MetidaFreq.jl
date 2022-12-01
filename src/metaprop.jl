@@ -20,14 +20,18 @@ end
 """
     metaprop(d, metric; adj = 0)
 
-Meta-analysis for 2x2 tables.
+Meta-analysis for 2x2 tables. Where:
 
-`ds`:
+`d`: `DataSet{ConTab}
 
 `metric`:
-- :rr
-- :or
-- :diff
+
+- :rr (Risk Ratio)
+- :or (Odd Ratio)
+- :diff (Risk Difference)
+
+`adj` - adjustment value.
+
 """
 function metaprop(d::DataSet, metric; adj = 0)
     if metric == :diff
@@ -51,31 +55,36 @@ Inverce Variance method used by default.
 
 `weights`:
 
-- `:iv` | `:default`
-- `:mh`
+- `:iv` | `:default` (Inverce Variance)
+- `:mh` (Mantel Haenszel)
+
+For Risk Difference `Sato, Greenland, & Robins (1989)` modification for variance estimation used. 
 
 """
 function metapropfixed(mp; weights = :default)
     varwts    = 1 ./ mp.var
     if weights == :default || weights == :iv
         wts    = varwts
+        est     = sum(wts .* mp.y) / sum(wts)
         var    = 1 / sum(varwts)
     elseif weights == :mh
         if mp.metric == :diff
             wts    = mhwdiff(mp.data)
+            est    = sum(wts .* mp.y) / sum(wts)
+            var    = mhvardiff(est, mp.data)
         elseif mp.metric == :or
             wts    = mhwor(mp.data)
+            est    = sum(wts .* mp.y) / sum(wts)
+            var    = 1 / sum(varwts) # CHECK !!!!
         elseif mp.metric == :rr
             wts    = mhwrr(mp.data)
+            est    = sum(wts .* mp.y) / sum(wts)
+            var    = 1 / sum(varwts) # CHECK !!!!
         end
-        var    = 1 / sum(varwts) # CHECK!
-        #var     = (sum(wts .* mp.var) / sum(wts) / length(wts))
-    #elseif weights == :peto
     else
         error("weights keyword unknown!")
     end
     k       = length(mp.y)
-    est     = sum(wts .* mp.y) / sum(wts)
     chisq   = sum(varwts .* (mp.y .^ 2))
     q       = sum(varwts .* ((mp.y .- est) .^ 2))
     i²      = max(0, (q - (k - 1))/q * 100)
@@ -87,7 +96,7 @@ end
 
 tau - τ² calculation method:
 
-- `:dl` DerSimonian-Laird
+- `:dl` DerSimonian-Laird (by default)
 - `:ho` Hedges - Olkin
 - `:hm` Hartung and Makambi
 - `:sj` Sidik and Jonkman
@@ -118,7 +127,7 @@ function metaproprandom(mp; tau = :default)
     end
     rwts = 1 ./ (mp.var .+ τ²)
     est     = sum(rwts .* mp.y) / sum(rwts)
-    var     = 1 / sum(rwts) #?
+    var     = 1 / sum(rwts) # VALIDATE !!!!
     i²      = (τ² / (τ² + (k - 1) / s)) * 100
     MetaPropResult{:random}(mp, rwts, est, var, chisq, q, i², τ²)
 end
@@ -142,6 +151,46 @@ function mhwdiff(data)
     end
     wts
 end
+
+# Greenland & Robins (1985)
+#=
+function mhvardiff(data)
+    var = 0.0
+    d   = 0.0
+    for i = 1:length(data)
+        N  = data[i].tab[1,1] + data[i].tab[1,2] + data[i].tab[2,1] + data[i].tab[2,2]
+        n1 = data[i].tab[1,1] + data[i].tab[1,2]
+        n2 = data[i].tab[2,1] + data[i].tab[2,2]
+
+        var += data[i].tab[1,1] / N^2 * data[i].tab[1,2] * n2^2 / n1 
+        +      data[i].tab[2,1] / N^2 * data[i].tab[2,2] * n1^2 / n2
+        d   += n1 * n2 / N
+    end
+    var / d^2
+end
+=#
+# Sato, Greenland, & Robins (1989)
+function mhvardiff(est, data)
+    sum1 = 0.0
+    sum2 = 0.0
+    sum3 = 0.0
+    for i = 1:length(data)
+        a = data[i].tab[1,1]
+        b = data[i].tab[1,2]
+        c = data[i].tab[2,1]
+        d = data[i].tab[2,2]
+        n1 = a + b
+        n2 = c + d
+        N  = n1 + n2
+        sum1 += c * (n1 / N) ^ 2 - a * (n2 / N) ^2 + (n1 / N) * (n2 / N) * (n2 - n1) / 2
+        sum2 += a * d / N + c * b / N
+        sum3 += n1 * n2 / N
+    end
+    (est * sum1 + sum2 / 2) / sum3 .^ 2
+end
+
+
+
 function mhwor(data)
     wts = Vector{Float64}(undef, length(data))
     for i = 1:length(data)
@@ -193,7 +242,7 @@ function Base.show(io::IO, mp::MetaProp)
     println(io, "  Tables: $(length(mp.data))")
     println(io, "  Metric: $(mp.metric)")
     println(io, "  Metric vector: $(mp.y)")
-    print(io, "  Metric variance: $(mp.var)")
+    print(io,   "  Metric variance: $(mp.var)")
 end
 struct MetaPropResult{Symbol}
     data::MetaProp
@@ -206,22 +255,28 @@ struct MetaPropResult{Symbol}
     hettau::Float64
 end
 
+
+function weights(mpr::MetaPropResult)
+    mpr.wts ./ (sum(mpr.wts) / 100)
+end
+
 function Base.show(io::IO, mpr::MetaPropResult{:fixed})
     println(io, "  Meta-proportion fixed-effect result:")
-    println(io, "  Weights (%): $(round.(mpr.wts ./ sum(mpr.wts) .* 100, sigdigits = 6))")
+    println(io, "  Weights (%): $(round.(mpr.wts ./ sum(mpr.wts) .* 100, sigdigits = 5))")
     println(io, "  Estimate: $(round(mpr.est, sigdigits = 6))")
     println(io, "  Variance (Std. error): $(round(mpr.var, sigdigits = 6)) ($(round(sqrt(mpr.var), sigdigits = 6)))")
     println(io, "  Chi²: $(round(mpr.chisq, sigdigits = 6))")
-    println(io, "  Q: $(round(mpr.hetq, sigdigits = 6))")
+    print(io,   "  Q: $(round(mpr.hetq, sigdigits = 6))")
     #print(io, "  I²: $(mpr.heti, sigdigits = 6))")
 end
 
 function Base.show(io::IO, mpr::MetaPropResult{:random})
     println(io, "  Meta-proportion random-effect result:")
+    println(io, "  Weights (%): $(round.(mpr.wts ./ sum(mpr.wts) .* 100, sigdigits = 5))")
     println(io, "  Estimate: $(round(mpr.est, sigdigits = 6))")
     println(io, "  Variance: $(round(mpr.var, sigdigits = 6))")
     println(io, "  Chi²: $(round(mpr.chisq, sigdigits = 6))")
     println(io, "  Q: $(round(mpr.hetq, sigdigits = 6))")
     println(io, "  I²: $(round(mpr.heti, sigdigits = 6))")
-    print(io, "  τ²: $(round(mpr.hettau, sigdigits = 6))")
+    print(io,   "  τ²: $(round(mpr.hettau, sigdigits = 6))")
 end

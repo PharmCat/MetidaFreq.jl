@@ -308,6 +308,7 @@ end
     mp = MetidaFreq.metaprop(mds, :or)
     mp = MetidaFreq.metaprop(mds, :diff)
     show(io, mp)
+
     # Fixed effect MH (diff)
     mp  = MetidaFreq.metaprop(mds, :diff)
     mpf = MetidaFreq.metapropfixed(mp; weights = :mh)
@@ -316,6 +317,7 @@ end
     ci = confint(mpf; level = 0.95)
     @test collect(ci)  ≈ [0.1146368241999458, 0.32474097688921] atol=1E-6
     show(io, mpf)
+
     # Fixed effect IV (diff)
     mp  = MetidaFreq.metaprop(mds, :diff)
     mpf = MetidaFreq.metapropfixed(mp; weights = :iv)
@@ -339,9 +341,10 @@ end
     @test mpf.est ≈ -0.054583175 atol=1E-6
     @test sqrt(mpf.var) ≈ 0.036584324 atol=1E-6
     @test mpf.hetq ≈ 2.962180668 atol=1E-6
-    ci = StatsBase.confint(mpf; level = 0.95)
+    ci = MetidaFreq.confint(mpf; level = 0.95)
     @test ci[1] ≈ -0.126287133 atol=1E-6
     @test ci[2] ≈  0.017120783 atol=1E-6
+
     #mpf.heti
 
     mpf = MetidaFreq.metapropfixed(mp; weights = :mh)
@@ -364,12 +367,120 @@ end
     mpf = MetidaFreq.metaproprandom(mp; tau = :hm)
 
     mpf = MetidaFreq.metaproprandom(mp; tau = :sj)
+    #!!!!!
     #@test mpf.est ≈ -0.058065603 atol=1E-6
     #@test sqrt(mpf.var) ≈ 0.047558623 atol=1E-6
     #@test mpf.hetq ≈ 2.962180668 atol=1E-6
     #@test mpf.heti ≈ 40.340569062 atol=1E-6
     #@test mpf.hettau ≈ 0.002740665 atol=1E-6
 
+    # 3 TRIAL CASE
+
+    metadf  = CSV.File(path*"/csv/meta.csv") |> DataFrame
+    ctds = MetidaFreq.contab(metadf, :group, :result; sort = :trial)
+
+    # DIFF 
+    mp = MetidaFreq.metaprop(ctds, :diff)
+        # FIXED
+        
+#=
+Binary Fixed-Effect Model - Inverse Variance
+Metric: Risk Difference
+ Model Results
+ Estimate  Lower bound   Upper bound   Std. error   p-Value   
+ 0.141681   -0.011966      0.295327     0.078392    0.070712  
+ Heterogeneity
+ Q(df=2)   Het. p-Value  
+ 4.423578    0.109505  
+study names  weights   
+trial 1: 23.428909%
+trial 2: 34.782495%
+trial 3: 41.788596%
+=#
+        mpf = MetidaFreq.metapropfixed(mp; weights = :iv)
+        @test MetidaFreq.weights(mpf) ≈ [34.782495, 41.788596, 23.428909] atol=1E-5 
+        ci = MetidaFreq.confint(mpf; level = 0.95)
+        @test ci[1] ≈ -0.011966 atol=1E-5
+        @test ci[2] ≈ 0.295327 atol=1E-5
+        @test mpf.est ≈ 0.141681 atol=1E-5
+        @test sqrt(mpf.var) ≈ 0.078392 atol=1E-5
+        #@test mpf.chisq ≈ 7.690002992971811 atol=1E-5
+        @test mpf.hetq ≈ 4.423578 atol=1E-5
+
+#=
+Binary Fixed-Effect Model - Mantel Haenszel
+Metric: Risk Difference
+ Model Results
+ Estimate  Lower bound   Upper bound   Std. error   p-Value   
+ 0.114863   -0.047325      0.277052     0.082751    0.165118  
+ Heterogeneity
+ Q(df=2)   Het. p-Value  
+ 4.540603    0.103281 
+ study names  weights   
+trial 1: 27.010409%
+trial 2: 26.572791%
+trial 3: 46.416800%   
+=#
+#rma.mh(measure="RD", ai=c(21,14,11), bi=c(20,17,12), ci=c(2,12,9), di=c(10,22,7))
+
+        mpf = MetidaFreq.metapropfixed(mp; weights = :mh)
+        @test MetidaFreq.weights(mpf) ≈ [26.572791, 46.416800, 27.010409] atol=1E-5 
+        ci = MetidaFreq.confint(mpf; level = 0.95)
+        @test ci[1] ≈ -0.047325 atol=1E-5
+        @test ci[2] ≈ 0.277052 atol=1E-5
+        @test mpf.est ≈ 0.114863 atol=1E-5
+        @test sqrt(mpf.var) ≈ 0.082751 atol=1E-5
+        #@test mpf.chisq ≈ 7.690002992971811 atol=1E-5
+        @test mpf.hetq ≈ 4.540603 atol=1E-5
+        @test mpf.heti ≈ 55.95 atol=1E-2
+
+        # RANDOM 
+#=
+Binary Random-Effects Model
+Metric: Risk Difference
+ Model Results
+ Estimate  Lower bound   Upper bound   Std. error   p-Value   
+ 0.130758   -0.112013      0.373530     0.123865    0.291128  
+ Heterogeneity
+ tau^2     Q(df=2)    Het. p-Value      I^2     
+ 0.026981  4.423578     0.109505     58.776613 
+ study names  weights   
+trial 1: 28.833406%
+trial 2: 34.362457%
+trial 3: 36.804138%
+=#
+        mpr = MetidaFreq.metaproprandom(mp; tau = :ho)
+        @test MetidaFreq.weights(mpr) ≈ [34.362457, 36.804138, 28.833406] atol=1E-5 
+        ci = MetidaFreq.confint(mpr; level = 0.95)
+        @test ci[1] ≈ -0.112013 atol=1E-5
+        @test ci[2] ≈ 0.373530 atol=1E-5
+        @test mpr.est ≈ 0.130758 atol=1E-5
+        @test sqrt(mpr.var) ≈ 0.123865 atol=1E-5
+        #@test mpr.chisq ≈ 7.690002992971811 atol=1E-5
+        @test mpr.hetq ≈ 4.423578 atol=1E-5
+        @test mpr.heti ≈ 58.776613 atol=1E-2
+        @test mpr.hettau ≈ 0.026981 atol=1E-2
+
+    # OR 
+
+    mp = MetidaFreq.metaprop(ctds, :or)
+
+        # FIXED 
+
+    mpf = MetidaFreq.metapropfixed(mp; weights = :mh)
+
+        # RANDOM 
+    mpf = MetidaFreq.metapropfixed(mp; weights = :iv)
+    @test mpf.est   ≈ 0.4164682333774169 atol=1E-5
+    @test mpf.var   ≈ 0.13107613010773247 atol=1E-5
+
+    mpr = MetidaFreq.metaproprandom(mp; tau = :dl)
+
+    # RR
+
+        # FIXED
+
+        # RANDOM 
 end
 
 @testset "  Goodman CI                                               " begin
