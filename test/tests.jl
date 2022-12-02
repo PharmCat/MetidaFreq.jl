@@ -375,6 +375,8 @@ end
     #@test mpf.hettau ≈ 0.002740665 atol=1E-6
 
     # 3 TRIAL CASE
+# Validated against OpenMetaAnalyst
+# http://www.cebm.brown.edu/openmeta/
 
     metadf  = CSV.File(path*"/csv/meta.csv") |> DataFrame
     ctds = MetidaFreq.contab(metadf, :group, :result; sort = :trial)
@@ -461,13 +463,116 @@ trial 3: 36.804138%
         @test mpr.heti ≈ 58.776613 atol=1E-2
         @test mpr.hettau ≈ 0.026981 atol=1E-2
 
+#=
+Binary Random-Effects Model
+Metric: Risk Difference
+ Model Results
+ Estimate  Lower bound   Upper bound   Std. error   p-Value   
+ 0.131655   -0.100067      0.363378     0.118228    0.265464  
+ Heterogeneity
+ tau^2     Q(df=2)    Het. p-Value     I^2     
+ 0.022931  4.423578     0.109505     54.78773  
+ study names  weights   
+trial 1: 28.432718%
+trial 2: 34.428819%
+trial 3: 37.138462%
+=#      
+        mpr = MetidaFreq.metaproprandom(mp; tau = :dl)
+        @test MetidaFreq.weights(mpr) ≈ [34.428819, 37.138462, 28.432718] atol=1E-5 
+        ci = MetidaFreq.confint(mpr; level = 0.95)
+        @test ci[1] ≈ -0.100067 atol=1E-5
+        @test ci[2] ≈ 0.363378 atol=1E-5
+        @test mpr.est ≈ 0.131655 atol=1E-5
+        @test sqrt(mpr.var) ≈ 0.118228 atol=1E-5
+        #@test mpr.chisq ≈ 7.690002992971811 atol=1E-5
+        @test mpr.hetq ≈ 4.423578 atol=1E-5
+        @test mpr.heti ≈ 54.78773 atol=1E-2
+        @test mpr.hettau ≈ 0.022931 atol=1E-2
+
+#=
+=#
+
+        mpr = MetidaFreq.metaproprandom(mp; tau = :hm)
+
+#=
+Binary Random-Effects Model
+Metric: Risk Difference
+ Model Results
+ Estimate  Lower bound   Upper bound   Std. error   p-Value   
+ 0.130641   -0.113672      0.374954     0.124652    0.294618  
+ Heterogeneity
+ tau^2     Q(df=2)    Het. p-Value      I^2     
+ 0.027562  4.423578     0.109505     59.291692  
+ study names  weights   
+trial 1: 28.885553%
+trial 2: 34.353474%
+trial 3: 36.760973%
+=#
+
+        mpr = MetidaFreq.metaproprandom(mp; tau = :sj)
+
+        
     # OR 
 
     mp = MetidaFreq.metaprop(ctds, :or)
 
         # FIXED 
+#=
+Binary Fixed-Effect Model - Inverse Variance
+Metric: Odds Ratio
+ Model Results
+ Estimate  Lower bound   Upper bound   p-Value   
+ 1.516596    0.745928      3.083490    0.250011  
+ Heterogeneity
+ Q(df=2)   Het. p-Value  
+ 3.540859    0.170260    
+ Results (log scale)
+ Estimate  Lower bound   Upper bound   Std. error  
+ 0.416468   -0.293126      1.126062     0.362044   
+ study names  weights   
+trial 1: 30.610197%
+trial 2: 18.789070%
+trial 3: 50.600734%
+=#
+
+    mpf = MetidaFreq.metapropfixed(mp; weights = :iv)
+    @test MetidaFreq.weights(mpf) ≈ [18.789070, 50.600734, 30.610197] atol=1E-5 
+    ci = MetidaFreq.confint(mpf; level = 0.95)
+    @test ci[1] ≈ -0.293126 atol=1E-5
+    @test ci[2] ≈ 1.126062 atol=1E-5
+    @test mpf.est ≈ 0.416468 atol=1E-5
+    @test sqrt(mpf.var) ≈ 0.362044 atol=1E-5
+    #@test mpf.chisq ≈ 4.864103956654892 atol=1E-5
+    @test mpf.hetq ≈ 3.540859 atol=1E-5
+    #@test mpf.heti ≈ 43.516535584304336 atol=1E-2 # CHECK
+#=
+Binary Fixed-Effect Model - Mantel Haenszel
+Metric: Odds Ratio
+ Model Results
+ Estimate  Lower bound   Upper bound   p-Value   
+ 1.602286    0.812626      3.159290    0.173521  
+ Heterogeneity
+ Q(df=2)   Het. p-Value  
+ 3.563907    0.168309    
+ Results (log scale)
+ Estimate  Lower bound   Upper bound   Std. error  
+ 0.471431   -0.207485      1.150347     0.346392
+ study names  weights   
+trial 1: 41.565005%
+trial 2: 11.327989%
+trial 3: 47.107006%
+=#
 
     mpf = MetidaFreq.metapropfixed(mp; weights = :mh)
+    @test MetidaFreq.weights(mpf) ≈ [11.327989, 47.107006, 41.565005] atol=1E-5 
+    ci = MetidaFreq.confint(mpf; level = 0.95)
+    @test ci[1] ≈ -0.207485 atol=1E-5
+    @test ci[2] ≈ 1.150347 atol=1E-5
+    @test mpf.est ≈ 0.471431 atol=1E-5
+    @test sqrt(mpf.var) ≈ 0.346392 atol=1E-5
+    #@test mpf.chisq ≈  atol=1E-5
+    @test mpf.hetq ≈ 3.563907 atol=1E-5
+    #@test mpf.heti ≈ 43.88 atol=1E-2 # CHECK
 
         # RANDOM 
     mpf = MetidaFreq.metapropfixed(mp; weights = :iv)
@@ -478,7 +583,64 @@ trial 3: 36.804138%
 
     # RR
 
+    mp = MetidaFreq.metaprop(ctds, :rr)
+
         # FIXED
+#=
+Binary Fixed-Effect Model - Inverse Variance
+Metric: Relative Risk
+ Model Results
+ Estimate  Lower bound   Upper bound   p-Value   
+ 1.161689    0.774870      1.741611    0.468192  
+ Heterogeneity
+ Q(df=2)   Het. p-Value  
+ 3.266050    0.195338    
+ Results (log scale)
+ Estimate  Lower bound   Upper bound   Std. error  
+ 0.149875   -0.255060      0.554810     0.206603
+ study names  weights   
+trial 1: 44.444116%
+trial 2:  9.703440%
+trial 3: 45.852444%
+=#
+    mpf = MetidaFreq.metapropfixed(mp; weights = :iv)
+    @test MetidaFreq.weights(mpf) ≈ [9.703440, 45.852444, 44.444116] atol=1E-5 
+    ci = MetidaFreq.confint(mpf; level = 0.95)
+    @test ci[1] ≈ -0.255060 atol=1E-5
+    @test ci[2] ≈ 0.554810 atol=1E-5
+    @test mpf.est ≈ 0.149875 atol=1E-5
+    @test sqrt(mpf.var) ≈ 0.206603 atol=1E-5
+    #@test mpf.chisq ≈ 3.792288756192065 atol=1E-5
+    @test mpf.hetq ≈ 3.266050 atol=1E-5
+    #@test mpf.heti ≈ 38.76395140594738 atol=1E-2 # CHECK
+#=
+Binary Fixed-Effect Model - Mantel Haenszel
+Metric: Relative Risk
+ Model Results
+ Estimate  Lower bound   Upper bound   p-Value   
+ 1.319025    0.869418      2.001139    0.192921  
+ Heterogeneity
+ Q(df=2)   Het. p-Value  
+ 3.644017    0.161701    
+ Results (log scale)
+ Estimate  Lower bound   Upper bound   Std. error  
+ 0.276893   -0.139931      0.693717     0.212669 
+ study names  weights   
+trial 1: 42.198426%
+trial 2: 12.300662%
+trial 3: 45.500912%
+=#
+
+    mpf = MetidaFreq.metapropfixed(mp; weights = :mh)
+    @test MetidaFreq.weights(mpf) ≈ [12.300662, 45.500912, 42.198426] atol=1E-5 
+    ci = MetidaFreq.confint(mpf; level = 0.95)
+    @test ci[1] ≈ -0.139931 atol=1E-5
+    @test ci[2] ≈ 0.693717 atol=1E-5
+    @test mpf.est ≈ 0.276893 atol=1E-5
+    @test sqrt(mpf.var) ≈ 0.212669 atol=1E-5
+    #@test mpf.chisq ≈ 3.792288756192065 atol=1E-5
+    @test mpf.hetq ≈ 3.644017 atol=1E-5
+    #@test mpf.heti ≈ 45.11551592477506 atol=1E-2 # CHECK
 
         # RANDOM 
 end

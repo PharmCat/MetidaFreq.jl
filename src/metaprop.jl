@@ -60,6 +60,7 @@ Inverce Variance method used by default.
 
 For Risk Difference `Sato, Greenland, & Robins (1989)` modification for variance estimation used. 
 
+*Results for RR and OR are in log-scale.**
 """
 function metapropfixed(mp; weights = :default)
     varwts    = 1 ./ mp.var
@@ -69,17 +70,17 @@ function metapropfixed(mp; weights = :default)
         var    = 1 / sum(varwts)
     elseif weights == :mh
         if mp.metric == :diff
-            wts    = mhwdiff(mp.data)
-            est    = sum(wts .* mp.y) / sum(wts)
-            var    = mhvardiff(est, mp.data)
+            wts      = mhwdiff(mp.data)
+            est      = sum(wts .* mp.y) / sum(wts)
+            var      = mhvardiff(est, mp.data)
         elseif mp.metric == :or
-            wts    = mhwor(mp.data)
-            est    = sum(wts .* mp.y) / sum(wts)
-            var    = 1 / sum(varwts) # CHECK !!!!
+            wts      = mhwor(mp.data)
+            #est    = sum(wts .* mp.y) / sum(wts)
+            est, var = mhvarestor(mp.data) 
         elseif mp.metric == :rr
-            wts    = mhwrr(mp.data)
-            est    = sum(wts .* mp.y) / sum(wts)
-            var    = 1 / sum(varwts) # CHECK !!!!
+            wts      = mhwrr(mp.data)
+            #est     = sum(wts .* mp.y) / sum(wts)
+            est, var = mhvarestrr(mp.data)
         end
     else
         error("weights keyword unknown!")
@@ -127,7 +128,7 @@ function metaproprandom(mp; tau = :default)
     end
     rwts = 1 ./ (mp.var .+ τ²)
     est     = sum(rwts .* mp.y) / sum(rwts)
-    var     = 1 / sum(rwts) # VALIDATE !!!!
+    var     = 1 / sum(rwts) 
     i²      = (τ² / (τ² + (k - 1) / s)) * 100
     MetaPropResult{:random}(mp, rwts, est, var, chisq, q, i², τ²)
 end
@@ -136,6 +137,9 @@ end
     StatsBase.confint(mpr::MetaPropResult; level = 0.95)
 
 Confidence interval for pooled proportion.
+
+!!! Warn
+    Results are in log-scale for OR and RR. 
 """
 function StatsBase.confint(mpr::MetaPropResult; level = 0.95)
     alpha = 1 - level
@@ -187,6 +191,52 @@ function mhvardiff(est, data)
         sum3 += n1 * n2 / N
     end
     (est * sum1 + sum2 / 2) / sum3 .^ 2
+end
+# variance by Robins et al. (1986)
+function mhvarestor(data)
+    Rsum  = 0.0
+    Ssum  = 0.0
+    sum1  = 0.0
+    sum2  = 0.0
+    sum3  = 0.0
+    for i = 1:length(data)
+        a = data[i].tab[1,1]
+        b = data[i].tab[1,2]
+        c = data[i].tab[2,1]
+        d = data[i].tab[2,2]
+        n1 = a + b
+        n2 = c + d
+        N  = n1 + n2
+        P  = a/N + d/N
+        Q  = b/N + c/N
+        R  = (a/N) * d
+        S  = (b/N) * c
+        Rsum += R
+        Ssum += S
+        sum1 += P * R
+        sum2 += P * S + Q * R
+        sum3 += Q * S
+    end
+    log(Rsum / Ssum), (sum1 / Rsum^2 + sum2 / (Rsum * Ssum)  + sum3 / Ssum^2) / 2
+end
+
+function mhvarestrr(data)
+    Rsum  = 0.0
+    Ssum  = 0.0
+    sum1  = 0.0
+    for i = 1:length(data)
+        a = data[i].tab[1,1]
+        b = data[i].tab[1,2]
+        c = data[i].tab[2,1]
+        d = data[i].tab[2,2]
+        n1 = a + b
+        n2 = c + d
+        N  = n1 + n2
+        Rsum += a * (n2 / N) 
+        Ssum += c * (n1 / N) 
+        sum1 += (n1 / N) * (n2 / N) * (a + c) - (a / N) * c
+    end
+    log(Rsum / Ssum), sum1 / (Rsum * Ssum)
 end
 
 
@@ -265,6 +315,9 @@ function Base.show(io::IO, mpr::MetaPropResult{:fixed})
     println(io, "  Weights (%): $(round.(mpr.wts ./ sum(mpr.wts) .* 100, sigdigits = 5))")
     println(io, "  Estimate: $(round(mpr.est, sigdigits = 6))")
     println(io, "  Variance (Std. error): $(round(mpr.var, sigdigits = 6)) ($(round(sqrt(mpr.var), sigdigits = 6)))")
+    if mpr.data.metric in (:or, :rr)
+    println(io, "  Exp(Estimate): $(round(exp(mpr.est), sigdigits = 6))")
+    end
     println(io, "  Chi²: $(round(mpr.chisq, sigdigits = 6))")
     print(io,   "  Q: $(round(mpr.hetq, sigdigits = 6))")
     #print(io, "  I²: $(mpr.heti, sigdigits = 6))")
