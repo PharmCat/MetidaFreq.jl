@@ -7,7 +7,7 @@ module MetidaFreq
 
 #using StaticArrays
 #using AxisArrays
-using Tables, CategoricalArrays, Distributions, Roots, StatsBase
+using Tables, CategoricalArrays, Distributions, Roots, StatsBase, LinearAlgebra, Optim
 
 import HypothesisTests
 import StatsBase: confint

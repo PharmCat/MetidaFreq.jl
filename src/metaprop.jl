@@ -92,6 +92,8 @@ function metapropfixed(mp; weights = :default)
     MetaPropResult{:fixed}(mp, wts, est, var,  chisq, q, i², NaN)
 end
 
+sq(x) = x * x
+sumsq(x) = sum(sq, x)
 """
     metaproprandom(mp; tau = :default)
 
@@ -99,8 +101,10 @@ tau - τ² calculation method:
 
 - `:dl` DerSimonian-Laird (by default)
 - `:ho` Hedges - Olkin
-- `:hm` Hartung and Makambi
+- `:hm` Hartung and Makambi (Veroniki et al. 2016)
 - `:sj` Sidik and Jonkman
+- `:ml` Maximum likelihood (ML) method (Veroniki et al. 2016)
+- `:reml` Restricted maximum likelihood (REML) method (Veroniki et al. 2016)
 
 """
 function metaproprandom(mp; tau = :default)
@@ -108,26 +112,41 @@ function metaproprandom(mp; tau = :default)
     wts     = 1 ./ mp.var
     swts    = sum(wts)
     var     = 1 / swts
-    est     = sum(wts .* mp.y) / swts
-    chisq   = sum(wts .* (mp.y .^ 2))
-    q       = sum(wts .* ((mp.y .- est) .^ 2))
+    est     = dot(wts, mp.y) / swts
+    zipwtsy = zip(wts, mp.y)
+    chisq   = sum(x-> x[1] * x[2]^2, zipwtsy)
+    #chisq   = sum(wts .* (mp.y .^ 2))
+    q       = sum(x-> x[1] * (x[2] - est)^2, zipwtsy)
+    #q       = sum(wts .* ((mp.y .- est) .^ 2))
     i²      = max(0, (q - (k - 1))/q * 100)
-    s       = sum(wts) - sum(wts .^ 2) / sum(wts)
+    s       = swts - sumsq(wts) / swts
+    #s       = sum(wts) - sum(wts .^ 2) / sum(wts)
     if tau == :dl || tau == :default # DerSimonian-Laird
         τ² = max(0, (q - (k - 1)) / s)
     elseif tau == :ho # Hedges - Olkin
-        τ² = max(0, 1 / (k - 1) * sum((mp.y .- mean(mp.y)) .^ 2) - 1 / k * sum(mp.var))
+        hom = mean(mp.y)
+        ho = sum(x-> (x - hom)^2, mp.y) 
+        τ² = max(0, 1 / (k - 1) * ho - 1 / k * sum(mp.var))
+        #τ² = max(0, 1 / (k - 1) * sum((mp.y .- mean(mp.y)) .^ 2) - 1 / k * sum(mp.var))
     elseif tau == :hm # Hartung and Makambi
-        τ² = q ^ 2 / (2 * (k - 1) + q) / (sum(wts) - sum(wts .^ 2) / sum(wts))
+        τ² = q ^ 2 / (2 * (k - 1) + q) / s
     elseif tau == :sj # Sidik and Jonkman
         qi  =  1 ./ (mp.var ./ max(0.01, 1 / (k - 1) * sum((mp.y .- mean(mp.y)) .^ 2) - 1 / k * sum(mp.var)) .+ 1)
         rest = sum(qi .* mp.y) / sum(qi)
         τ²   = 1 / (k - 1) * sum(qi .* ((mp.y .- rest) .^ 2))
+    elseif tau == :ml
+        τ² = max(0, (q - (k - 1)) / s)
+        τ² = taumlsolve(τ², k, mp.y, mp.var)
+    elseif tau == :reml
+        τ² = max(0, (q - (k - 1)) / s)
+        τ² = tauremlsolve(τ², k, mp.y, mp.var)
     else
         error("tau keyword unknown!")
     end
-    rwts = 1 ./ (mp.var .+ τ²)
-    est     = sum(rwts .* mp.y) / sum(rwts)
+    rwts = @. 1 / (mp.var + τ²)
+    #rwts = 1 ./ (mp.var .+ τ²)
+    est     = dot(rwts, mp.y) / sum(rwts)
+    #est     = sum(rwts .* mp.y) / sum(rwts)
     var     = 1 / sum(rwts) 
     i²      = (τ² / (τ² + (k - 1) / s)) * 100
     MetaPropResult{:random}(mp, rwts, est, var, chisq, q, i², τ²)
@@ -286,6 +305,35 @@ function contabrr(contab; adj = 0)
     return log(pt / pc), 1 / a - 1 / (a + b) + 1 / c - 1 /(c + d)
 end
 
+function tauml(μ, τ², k, y::AbstractVector, v::AbstractVector)
+    sum1 = sum(x-> log(x + τ²), v)
+    sum2 = sum(x-> (x[1] - μ)^2 /(x[2] + τ²), zip(y, v))
+    - (k * log(2π) + sum1 + sum2) / 2
+end
+
+function taureml(μ, τ², k, y::AbstractVector, v::AbstractVector)
+    tauml(μ, τ², k, y, v) - log(sum(x-> 1/(x + τ²), v))/2
+end
+
+function taumlsolve(τ², k, y::AbstractVector, v::AbstractVector)
+    varwts = @. 1/(v + τ²)
+    μ      =  dot(varwts, y)/sum(varwts)
+    optf(x) = - tauml(x[1], exp(x[2]), k, y, v)
+    res = optimize(optf, [μ, log(τ²)], Newton(); autodiff = :forward)
+    mz = Optim.minimizer(res)
+    exp(mz[2])
+end
+
+function tauremlsolve(τ², k, y::AbstractVector, v::AbstractVector)
+    τ²     = taumlsolve(τ², k, y, v)
+    varwts = @. 1/(v + τ²)
+    μ      =  dot(varwts, y)/sum(varwts)
+    optf(x) = - taureml(μ, exp(x[1]), k, y, v)
+    res = optimize(optf, [log(τ²)], Newton(); autodiff = :forward)
+    mz = Optim.minimizer(res)
+    exp(mz[1])
+end
+
 
 function Base.show(io::IO, mp::MetaProp)
     println(io, "  Meta-proportion:")
@@ -327,7 +375,10 @@ function Base.show(io::IO, mpr::MetaPropResult{:random})
     println(io, "  Meta-proportion random-effect result:")
     println(io, "  Weights (%): $(round.(mpr.wts ./ sum(mpr.wts) .* 100, sigdigits = 5))")
     println(io, "  Estimate: $(round(mpr.est, sigdigits = 6))")
-    println(io, "  Variance: $(round(mpr.var, sigdigits = 6))")
+    println(io, "  Variance  (Std. error): $(round(mpr.var, sigdigits = 6)) ($(round(sqrt(mpr.var), sigdigits = 6)))")
+    if mpr.data.metric in (:or, :rr)
+    println(io, "  Exp(Estimate): $(round(exp(mpr.est), sigdigits = 6))")
+    end
     println(io, "  Chi²: $(round(mpr.chisq, sigdigits = 6))")
     println(io, "  Q: $(round(mpr.hetq, sigdigits = 6))")
     println(io, "  I²: $(round(mpr.heti, sigdigits = 6))")

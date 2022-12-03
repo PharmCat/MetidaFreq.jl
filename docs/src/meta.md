@@ -10,8 +10,9 @@ References:
 5. Sidik, K. & Jonkman, J. N. (2005b) Simple heterogeneity variance estimation for meta-analysis. Journal of the Royal Statistical Society, Series C, 54, 367–384.
 6. Yusuf, S., Peto, R., Lewis, J., Collins, R., & Sleight, P. (1985). Beta blockade during and after myocardial infarction: An overview of the randomized trials. Progress in Cardiovascular Disease, 27, 335-371.
 7. Hartung, J. & Makambi, K.H.. (2002). Positive estimation of the between-study variance meta-analysis. South African Statistical Journal. 36. 
-8. metafor: Viechtbauer, Wolfgang. "Conducting meta-analyses in R with the metafor package." Journal of 36 (2010).
-9. OpenMetaAnalyst: Wallace, Byron C., Issa J. Dahabreh, Thomas A. Trikalinos, Joseph Lau, Paul Trow, and Christopher H. Schmid. "Closing the Gap between Methodologists and End-Users: R as a Computational Back-End." Journal of Statistical Software 49 (2012): 5."
+8. Veroniki, A. A., Jackson, D., Viechtbauer, W., Bender, R., Bowden, J., Knapp, G., Kuss, O., Higgins, J. PT., Langan, D., and Salanti, G. (2016) Methods to estimate the between-study variance and its uncertainty in meta-analysis. Res. Syn. Meth., 7: 55– 79. doi: 10.1002/jrsm.1164.
+9. metafor: Viechtbauer, Wolfgang. "Conducting meta-analyses in R with the metafor package." Journal of 36 (2010).
+10. OpenMetaAnalyst: Wallace, Byron C., Issa J. Dahabreh, Thomas A. Trikalinos, Joseph Lau, Paul Trow, and Christopher H. Schmid. "Closing the Gap between Methodologists and End-Users: R as a Computational Back-End." Journal of Statistical Software 49 (2012): 5."
 
 
 

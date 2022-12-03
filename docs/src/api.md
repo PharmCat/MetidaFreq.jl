@@ -83,3 +83,21 @@ MetidaFreq.metapropfixed
 ```@docs
 MetidaFreq.metaproprandom
 ```
+
+
+## HypothesisTests
+
+### HypothesisTests.ChisqTest
+```@docs
+HypothesisTests.ChisqTest
+```
+
+### HypothesisTests.MultinomialLRTest
+```@docs
+HypothesisTests.MultinomialLRTest
+```
+
+### HypothesisTests.FisherExactTest
+```@docs
+HypothesisTests.FisherExactTest
+```

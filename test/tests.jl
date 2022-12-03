@@ -491,8 +491,18 @@ trial 3: 37.138462%
 
 #=
 =#
-
+        # NEED CHECK SOMEHOW
         mpr = MetidaFreq.metaproprandom(mp; tau = :hm)
+        @test MetidaFreq.weights(mpr) ≈ [34.44537645338772, 37.22663989261683, 28.32798365399544] atol=1E-5 
+        ci = MetidaFreq.confint(mpr; level = 0.95)
+        @test ci[1] ≈ -0.09715839439746077 atol=1E-5
+        @test ci[2] ≈ 0.3609333913404578 atol=1E-5
+        @test mpr.est ≈ 0.131887498471498535 atol=1E-5
+        @test sqrt(mpr.var) ≈ 0.11686229679506546 atol=1E-5
+        #@test mpr.chisq ≈ 7.690002992971811 atol=1E-5
+        @test mpr.hetq ≈ 4.423577921113032 atol=1E-5
+        @test mpr.heti ≈ 53.7359206749384 atol=1E-2
+        @test mpr.hettau ≈ 0.021979683269097428 atol=1E-2
 
 #=
 Binary Random-Effects Model
@@ -510,6 +520,32 @@ trial 3: 36.760973%
 =#
 
         mpr = MetidaFreq.metaproprandom(mp; tau = :sj)
+
+        # ML 
+        mpr = MetidaFreq.metaproprandom(mp; tau = :ml)
+        @test MetidaFreq.weights(mpr) ≈ [34.72637917278319, 39.345440640642835, 25.928180186573965] atol=1E-5 
+        ci = MetidaFreq.confint(mpr; level = 0.95)
+        @test ci[1] ≈ -0.04649350144021322 atol=1E-5
+        @test ci[2] ≈ 0.3204348488098385 atol=1E-5
+        @test mpr.est ≈ 0.13697067368481264 atol=1E-5
+        @test sqrt(mpr.var) ≈ 0.09360589101236938 atol=1E-5
+        #@test mpr.chisq ≈ 7.690002992971811 atol=1E-5
+        @test mpr.hetq ≈ 4.423577921113032 atol=1E-5
+        @test mpr.heti ≈ 28.55612879933495 atol=1E-2
+        @test mpr.hettau ≈ 0.007563712502569099 atol=1E-2
+
+        # REML
+        mpr = MetidaFreq.metaproprandom(mp; tau = :reml)
+        @test MetidaFreq.weights(mpr) ≈ [34.424498831686016, 37.11579173325517, 28.459709435058826] atol=1E-5 
+        ci = MetidaFreq.confint(mpr; level = 0.95)
+        @test ci[1] ≈ -0.10083053686105758 atol=1E-5
+        @test ci[2] ≈ 0.364020576665633 atol=1E-5
+        @test mpr.est ≈ 0.1315950199022877 atol=1E-5
+        @test sqrt(mpr.var) ≈ 0.11858664679386356 atol=1E-5
+        #@test mpr.chisq ≈ 7.690002992971811 atol=1E-5
+        @test mpr.hetq ≈ 4.423577921113032 atol=1E-5
+        @test mpr.heti ≈ 55.05817174207822 atol=1E-2
+        @test mpr.hettau ≈ 0.023183110754144722 atol=1E-2
 
         
     # OR 

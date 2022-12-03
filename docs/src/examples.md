@@ -4,6 +4,8 @@
 using DataFrames
 ```
 
+## Simple contingency table
+
 ```@example freqexample
 using MetidaFreq, CSV, DataFrames;
 
@@ -11,6 +13,8 @@ df = CSV.File(joinpath(dirname(pathof(MetidaFreq)), "..", "test", "csv",  "ft.cs
 
 ct = MetidaFreq.contab(df, :row, :col)
 ```
+
+## Confidence Intervals
 
 ```@example freqexample
 MetidaFreq.propci(ct, method = :cp)
@@ -28,10 +32,11 @@ MetidaFreq.orci(ct)
 MetidaFreq.rrci(ct)
 ```
 
+## Sorting example
+
 ```@example freqexample
 ct = MetidaFreq.contab(df, :row, :col; sort = :s1)
 ```
-
 
 ```@example freqexample
 ct = MetidaFreq.contab(df, :row, :col; sort = [:s1, :s2])
@@ -45,7 +50,7 @@ MetidaFreq.dropzeros!(ct)
 MetidaFreq.dropzeros!(ct)
 ```
 
-
+## Meta-analysis
 
 ```@example freqexample
 pf1 = MetidaFreq.contab([15 8; 5 14])
