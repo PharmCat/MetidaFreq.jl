@@ -282,7 +282,9 @@ function Base.size(contab::ConTab, dim::Int)
 end
 function Base.show(io::IO, contab::ConTab)
     println(io, "  Contingency table:")
-    PrettyTables.pretty_table(io, contab.tab; header = contab.coln, row_names = contab.rown, tf = PrettyTables.tf_compact)
+    tab  = hcat(contab.tab, sum(contab.tab, dims = 2))
+    coln = push(contab.coln, :Total)
+    PrettyTables.pretty_table(io, tab; header = coln, row_names = contab.rown, tf = PrettyTables.tf_compact)
     if !isnothing(contab.id) && length(contab.id) > 0
         print(io, "  ID: ")
         for (k,v) in contab.id

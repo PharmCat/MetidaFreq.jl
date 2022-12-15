@@ -240,7 +240,6 @@ end
     propci(contab::ConTab; level = 0.95, method = :default)
 """
 function propci(contab::ConTab; level = 0.95, method = :default)
-    alpha    = 1 - level
     if  size(contab.tab, 2) != 2 throw(ArgumentError("CI only for N X 2 tables.")) end
     if size(contab, 1) > 1
         v = Vector{Tuple{Float64, Float64}}(undef, size(contab, 1))
@@ -292,6 +291,36 @@ function mpropci(contab::ConTab; level = 0.95, method = :default)
         return v
     else
         return fx(view(contab.tab, 1, :), alpha)
+    end
+end
+"""
+    oddsci(xa, xb; level = 0.95, method = :default)
+"""
+function oddsci(xa, xb; level = 0.95, method = :default) # !!! NEED CHECK !!!
+    alpha    = 1 - level
+    est       = xa/xb
+    estI      = log(est)
+    se        = sqrt(1/xa + 1/xb)
+    z         = quantile(Normal(), 1 - alpha / 2)
+    return exp(estI - z * se), exp(estI + z * se)
+end
+"""
+    oddsci(contab::ConTab; level = 0.95, method = :default)
+"""
+function oddsci(contab::ConTab; level = 0.95, method = :default)
+    if  size(contab.tab, 2) != 2 throw(ArgumentError("CI only for N X 2 tables.")) end
+    if size(contab, 1) > 1
+        v = Vector{Tuple{Float64, Float64}}(undef, size(contab, 1))
+        for i = 1:size(contab, 1)
+            xa = contab.tab[i, 1]
+            nb = contab.tab[i, 2]
+            v[i] = oddsci(xa, xb; level = level, method = method)
+        end
+        return v
+    else
+        xa = contab.tab[1, 1]
+        xb = contab.tab[1, 2]
+        return oddsci(xa, xb; level = level, method = method)
     end
 end
 
