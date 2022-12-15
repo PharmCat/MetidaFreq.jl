@@ -520,7 +520,11 @@ trial 3: 36.760973%
 =#
 
         mpr = MetidaFreq.metaproprandom(mp; tau = :sj)
-
+#=
+SPSS ML								
+Effect size   SD		   Z		  Pval        95%CIL     95%CIU
+0.136971	0.093606	1.463261	0.143396	-0.046495	0.320436
+=#  
         # ML 
         mpr = MetidaFreq.metaproprandom(mp; tau = :ml)
         @test MetidaFreq.weights(mpr) ≈ [34.72637917278319, 39.345440640642835, 25.928180186573965] atol=1E-5 
@@ -610,12 +614,31 @@ trial 3: 47.107006%
     @test mpf.hetq ≈ 3.563907 atol=1E-5
     #@test mpf.heti ≈ 43.88 atol=1E-2 # CHECK
 
-        # RANDOM 
-    mpf = MetidaFreq.metapropfixed(mp; weights = :iv)
-    @test mpf.est   ≈ 0.4164682333774169 atol=1E-5
-    @test mpf.var   ≈ 0.13107613010773247 atol=1E-5
 
-    mpr = MetidaFreq.metaproprandom(mp; tau = :dl)
+        # RANDOM 
+
+        mpr = MetidaFreq.metaproprandom(mp; tau = :ho)
+
+#=
+CHECK
+=#
+        mpr = MetidaFreq.metaproprandom(mp; tau = :dl)
+#=
+CHECK
+=#
+        mpr = MetidaFreq.metaproprandom(mp; tau = :hm)
+#=
+CHECK
+=#
+        mpr = MetidaFreq.metaproprandom(mp; tau = :sj)
+#=
+CHECK
+=#
+        mpr = MetidaFreq.metaproprandom(mp; tau = :ml)
+#=
+CHECK
+=#
+        mpr = MetidaFreq.metaproprandom(mp; tau = :reml)
 
     # RR
 
@@ -679,6 +702,49 @@ trial 3: 45.500912%
     #@test mpf.heti ≈ 45.11551592477506 atol=1E-2 # CHECK
 
         # RANDOM 
+#=
+CHECK
+=#
+        mpr = MetidaFreq.metaproprandom(mp; tau = :ho)
+        @test MetidaFreq.weights(mpr) ≈ [19.280363, 40.548276, 40.171359] atol=1E-5 
+        ci = MetidaFreq.confint(mpr; level = 0.95)
+        @test ci[1] ≈ -0.44854363729260716 atol=1E-5
+        @test ci[2] ≈ 0.9510473341505784 atol=1E-5
+        @test mpr.est ≈ 0.2512518484289856 atol=1E-5
+        @test sqrt(mpr.var) ≈ 0.3570450739102805 atol=1E-5
+        #@test mpr.chisq ≈ 7.690002992971811 atol=1E-5
+        @test mpr.hetq ≈ 3.2660500569826847 atol=1E-5
+        @test mpr.heti ≈ 60.172084286641514 atol=1E-2
+        @test mpr.hettau ≈ 0.22130152193554511 atol=1E-2   
+#=
+CHECK
+=#
+        mpr = MetidaFreq.metaproprandom(mp; tau = :dl)
+#=
+CHECK
+=#
+        mpr = MetidaFreq.metaproprandom(mp; tau = :hm)
+#=
+CHECK
+=#
+        mpr = MetidaFreq.metaproprandom(mp; tau = :sj)
+#=
+CHECK
+=#
+        mpr = MetidaFreq.metaproprandom(mp; tau = :ml)
+#=
+CHECK
+=#
+        mpr = MetidaFreq.metaproprandom(mp; tau = :reml)
+
+
+    # DataFrame Test
+    df = DataFrame(ctds)
+    @test df[1, 1] == 2
+    @test df[1, 2] == 21
+    @test df[1, 3] == 20
+    @test df[1, 4] == 2
+    @test df[1, 5] == 10
 end
 
 @testset "  Goodman CI                                               " begin

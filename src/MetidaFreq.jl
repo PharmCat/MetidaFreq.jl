@@ -9,9 +9,9 @@ module MetidaFreq
 #using AxisArrays
 using Tables, CategoricalArrays, Distributions, Roots, StatsBase, LinearAlgebra, Optim
 
-import HypothesisTests
+import HypothesisTests, MetidaBase
 import StatsBase: confint
-import MetidaBase: AbstractData, AbstractIdData, DataSet, Proportion, PrettyTables
+import MetidaBase: AbstractData, AbstractIdData, DataSet, Proportion, PrettyTables, metida_table_, getid, map, getdata
 import HypothesisTests: ChisqTest, MultinomialLRTest, FisherExactTest
 import Base: ht_keyindex, size, show, permutedims
 

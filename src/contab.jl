@@ -283,7 +283,7 @@ end
 function Base.show(io::IO, contab::ConTab)
     println(io, "  Contingency table:")
     tab  = hcat(contab.tab, sum(contab.tab, dims = 2))
-    coln = push(contab.coln, :Total)
+    coln = push!(copy(contab.coln), "Total")
     PrettyTables.pretty_table(io, tab; header = coln, row_names = contab.rown, tf = PrettyTables.tf_compact)
     if !isnothing(contab.id) && length(contab.id) > 0
         print(io, "  ID: ")
@@ -297,4 +297,30 @@ function Base.show(io::IO, ds::DataSet{<:ConTab})
     for i in 1:length(ds)
         println(io, ds[i])
     end
+end
+
+
+function MetidaBase.metida_table_(obj::DataSet{T}) where T <: ConTab
+    idset  = Set(keys(first(obj).id))
+    s      = size(first(obj).tab)
+    r      = first(obj).rown
+    c      = first(obj).coln
+    if length(obj) > 1
+        for i = 2:length(obj)
+            union!(idset,  Set(keys(obj[i].id)))
+            if size(obj[i]) != s error("Unequal table size.") end
+            if obj[i].rown != r error("Unequal row names.") end
+            if obj[i].coln != c error("Unequal col names.") end
+        end
+    end
+    # Check all same size
+    
+    inds = [(x,y) for x in 1:s[1] for y in 1:s[2]] 
+
+    mt1 = metida_table_((getid(obj, :, c) for c in idset)...; names = idset)
+
+    names = ["r$(i[1])("*first(obj).rown[i[1]]*"):c$(i[2])("*first(obj).coln[i[2]]*")" for i in inds]
+
+    mt2 = metida_table_((map(x->x.tab[i[1], i[2]], getdata(obj)) for i in inds)...; names = names)
+    merge(mt1, mt2)
 end
