@@ -293,6 +293,10 @@ end
     @test ct[5].tab[2,1] == 10
     @test ct[5].tab[2,2] == 18
 
+    ct = MetidaFreq.contab([1 2; 3 4])
+    Base.show(io, ct)
+    ct = MetidaFreq.contab([1, 2, 3, 4])
+    Base.show(io, ct)
 end
 
 @testset "  Meta proportions                                         " begin

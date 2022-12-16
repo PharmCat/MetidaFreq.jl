@@ -1,7 +1,7 @@
 
 # MetidaFreq.jl
 
-struct ConTab{T <: AbstractMatrix{Int}, R <: Union{Nothing, Vector{S}} where S <: AbstractString, C <: Union{Nothing, Vector{S}} where S <: AbstractString, ID <: Dict} <: AbstractIdData
+struct ConTab{T <: AbstractMatrix{Int}, R <: Vector{S} where S <: AbstractString, C <:  Vector{S} where S <: AbstractString, ID <: Dict} <: AbstractIdData
     tab::T
     rown::R
     coln::C
@@ -18,6 +18,12 @@ function contab(m::AbstractMatrix{Int};
     rownames::Union{Vector{String}, Nothing} = nothing,
     colnames::Union{Vector{String}, Nothing} = nothing,
     id::Dict = Dict())
+    if isnothing(rownames)
+        rownames = fill("", size(m, 1))
+    end
+    if isnothing(colnames)
+        colnames = fill("", size(m, 2))
+    end
     ConTab{typeof(m), typeof(rownames), typeof(colnames), typeof(id)}(m, rownames, colnames, id)
 end
 """
@@ -30,6 +36,12 @@ function contab(v::AbstractVector{Int};
     rownames::Union{Vector{String}, Nothing} = nothing,
     colnames::Union{Vector{String}, Nothing} = nothing,
     id::Dict = Dict())
+    if isnothing(rownames)
+        rownames = [""]
+    end
+    if isnothing(colnames)
+        colnames = fill("", length(v))
+    end
     contab(permutedims(v); rownames = rownames, colnames = colnames, id = id)
 end
 
