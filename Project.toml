@@ -25,6 +25,7 @@ Optim = "1"
 Roots = "1, 2"
 StatsBase = "0.27, 0.28, 0.29, 0.30, 0.31, 0.32, 0.33"
 Tables = "1"
+julia = "1"
 
 [extras]
 
