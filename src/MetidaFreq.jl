@@ -15,7 +15,7 @@ import MetidaBase: AbstractData, AbstractIdData, DataSet, Proportion, PrettyTabl
 import HypothesisTests: ChisqTest, MultinomialLRTest, FisherExactTest
 import Base: ht_keyindex, size, show, permutedims
 
-export contab, diffci, orci, rrci, confint
+export contab, propci, diffci, orci, rrci, confint
 
 export metaprop, metapropfixed, metaproprandom
 

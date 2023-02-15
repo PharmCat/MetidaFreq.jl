@@ -49,7 +49,7 @@ function diffci(x1, n1, x2, n2; level = 0.95, method = :default)
     elseif method == :jeffrey
         ci_diff_jeffrey(x1, n1, x2, n2, alpha)
     else
-        throw(ArgumentError("unknown ci method=$(method)"))
+        throw(ArgumentError("unknown ci method=$(method), possible is: :mn, :wald, :waldcc, :nhs, :nhscc, :ac, :ha, :mover, :jeffrey"))
     end
 end
 """
@@ -107,7 +107,7 @@ function orci(x1, n1, x2, n2; level = 0.95, method = :default)
     elseif method == :mover
         ci_or_mover(x1, n1, x2, n2, alpha)
     else
-        throw(ArgumentError("unknown ci method=$(method)"))
+        throw(ArgumentError("unknown ci method=$(method), possible is: :fm, :woolf, :awoolf, :mover"))
     end
 end
 """
@@ -161,7 +161,7 @@ function rrci(x1, n1, x2, n2; level = 0.95, method = :default)
     elseif method == :mover
         ci_rr_mover(x1, n1, x2, n2, alpha)
     else
-        throw(ArgumentError("unknown ci method=$(method)"))
+        throw(ArgumentError("unknown ci method=$(method), possible is: :mn, :fm, :cli, :li, :mover"))
     end
 end
 """
@@ -232,7 +232,7 @@ function propci(x::Int, n::Int; level = 0.95, method = :default)
     elseif method==:jeffrey
         fx = ci_prop_jeffrey
     else
-        throw(ArgumentError("unknown method!"))
+        throw(ArgumentError("unknown ci method=$(method), possible is: :wilson, :wilsoncc, :cp, :blaker, :soc, :arc, :wald, :waldcc, :ac, :jeffrey"))
     end
     fx(x, n, alpha)
 end
