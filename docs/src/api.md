@@ -20,6 +20,11 @@ MetidaFreq.freq
 MetidaFreq.addcol
 ```
 
+### MetidaFreq.colorder
+```@docs
+MetidaFreq.colorder
+```
+
 ### MetidaFreq.colreduce
 ```@docs
 MetidaFreq.colreduce

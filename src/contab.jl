@@ -155,11 +155,74 @@ function colreduce(f::Function, data::DataSet{<:ConTab}; coln = nothing)
 end
 
 """
+    colorder(ct::ConTab, v::AbstractVector{AbstrctString})
+
+Make contigency trable with column order as in `v` vector. If item in `v` not present in tab collumn's names - collumn of zeros will be made for that item.
+
+Example 
+
+```
+Contingency table:
+--------- -------- ----- -------
+              B      D    Total 
+--------- -------- ----- -------
+   G1         1     123     124
+   G2         0     124     124
+--------- -------- ----- -------
+ ID: ColName => id;
+```
+
+after `colorder(ct, ["A", "B", "C", "D"])`:
+
+```
+Contingency table:
+--------- -------- --------- --------- ----- -------
+              A         B         C      D    Total 
+--------- -------- --------- --------- ----- -------
+    G1        0         1         0     123     124
+    G2        0         0         0     124     124
+--------- -------- --------- --------- ----- -------
+ID: ColName => id;
+```
+"""
+function colorder(ct::ConTab, v::AbstractVector{<:AbstractString}) 
+
+    foreach(x-> if x ∉ v error("Not all col names in new vector: "*x*" ID: "*string(ct.id)) end, ct.coln)
+     
+    tab = zeros(Int, size(ct.tab, 1), length(v))
+    for i = 1:length(v)
+        ind = findfirst(x -> x == v[i], ct.coln)
+        if !isnothing(ind) tab[:, i] .= view(ct.tab, :, ind) end
+    end
+    ConTab(tab, ct.rown, v, ct.id)
+end
+
+function colorder(data::DataSet{<:ConTab}, v::AbstractVector{<:AbstractString})
+    DataSet(map(x -> colorder(x, v), getdata(data)))
+end
+
+function contab(data, row::Union{Symbol, String}, col; sort::Union{Nothing, Symbol, AbstractVector{Symbol}} = nothing)
+    namevec = names(data)
+    if eltype(col) <: Int icol = namevec[first(col)] else icol = first(col) end
+    tab = contab(data, row, icol; sort = sort, idp = :ColName => icol)
+    if isa(tab, ConTab) ds = DataSet([tab]) else ds = tab end
+    if length(col) > 1
+        for i = 2:length(col)
+            if isa(col[i], Int) icol = namevec[col[i]] else icol = col[i] end
+            tab = contab(data, row, icol; sort = sort, idp = :ColName => icol)
+            if isa(tab, ConTab) push!(getdata(ds), tab) else append!(getdata(ds), getdata(tab))  end
+        end
+    end
+    return ds
+end
+"""
     contab(data, row::Symbol, col::Symbol; sort::Union{Nothing, Symbol, AbstractVector{Symbol}} = nothing, id = nothing)
 
 Make contingency table from data using `row` and `col` columns.
 """
-function contab(data, row::Symbol, col::Symbol; sort::Union{Nothing, Symbol, AbstractVector{Symbol}} = nothing, id = nothing)
+function contab(data, row::Union{Symbol, String}, col::Union{Symbol, String}; sort::Union{Nothing, Symbol, AbstractVector{Symbol}} = nothing, idp::Union{Nothing, Pair} = nothing)
+    if isa(row, String) row = Symbol(row) end
+    if isa(col, String) col = Symbol(col) end
     cols = Tables.columns(data)
     c    = isnothing(sort) ? (row, col) : isa(sort, Symbol) ? (row, col, sort) : Tuple(append!([row, col], sort))
     res  = contab_(Tuple(Tables.getcolumn(cols, y) for y in c))
@@ -187,6 +250,7 @@ function contab(data, row::Symbol, col::Symbol; sort::Union{Nothing, Symbol, Abs
             for k in keys(cdi)
                 colstr[cdi[k]] = string(k)
             end
+            if !isnothing(idp) push!(id, idp) end
             v[i] = ConTab(Matrix(view(res[1], :, :, ci[i])), rowstr,  colstr, Dict(id))
         end
         return DataSet(v)
@@ -197,7 +261,7 @@ function contab(data, row::Symbol, col::Symbol; sort::Union{Nothing, Symbol, Abs
         for k in keys(cdi)
             colstr[cdi[k]] = string(k)
         end
-        return ConTab(res[1], rowstr,  colstr, (isnothing(id) ? Dict() : id))
+        return ConTab(res[1], rowstr,  colstr, (isnothing(idp) ? Dict() : Dict(idp)))
     end
 end
 
@@ -296,7 +360,7 @@ function Base.show(io::IO, contab::ConTab)
     println(io, "  Contingency table:")
     tab  = hcat(contab.tab, sum(contab.tab, dims = 2))
     coln = push!(copy(contab.coln), "Total")
-    PrettyTables.pretty_table(io, tab; header = coln, row_names = contab.rown, tf = PrettyTables.tf_compact)
+    PrettyTables.pretty_table(io, tab; header = coln, row_labels = contab.rown, tf = PrettyTables.tf_compact)
     if !isnothing(contab.id) && length(contab.id) > 0
         print(io, "  ID: ")
         for (k,v) in contab.id
