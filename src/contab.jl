@@ -360,7 +360,7 @@ function Base.show(io::IO, contab::ConTab)
     println(io, "  Contingency table:")
     tab  = hcat(contab.tab, sum(contab.tab, dims = 2))
     coln = push!(copy(contab.coln), "Total")
-    PrettyTables.pretty_table(io, tab; header = coln, row_names = contab.rown, tf = PrettyTables.tf_compact)
+    PrettyTables.pretty_table(io, tab; header = coln, row_labels = contab.rown, tf = PrettyTables.tf_compact)
     if !isnothing(contab.id) && length(contab.id) > 0
         print(io, "  ID: ")
         for (k,v) in contab.id
