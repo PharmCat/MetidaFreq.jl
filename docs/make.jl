@@ -1,4 +1,4 @@
-using Documenter, MetidaFreq, Weave, PrettyTables, CSV, DataFrames, HypothesisTests 
+using Documenter, MetidaFreq, PrettyTables, CSV, DataFrames, HypothesisTests 
 #using DocumenterLaTeX
 
 
