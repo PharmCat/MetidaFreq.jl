@@ -1,4 +1,94 @@
+#=
+Brown L.D., Cai T.T. and Dasgupta A. (2001) Interval estimation for a binomial proportion Statistical Science, 16(2), pp. 101-133.
+Witting H. (1985) Mathematische Statistik I. Stuttgart: Teubner.
+Pratt J. W. (1968) A normal approximation for binomial, F, Beta, and other common, related tail probabilities Journal of the American Statistical Association, 63, 1457- 1483.
+Wilcox, R. R. (2005) Introduction to robust estimation and hypothesis testing. Elsevier Academic Press
+=#
 
+"""
+    propci(x::Int, n::Int; level = 0.95, method = :default)
+
+`method`:
+
+- `:wilson` | `:default` - Wilson's confidence interval (CI) for a single proportion (wilson score) (Wilson, 1927);
+- `:wilsoncc` - Wilson's CI with continuity correction (CC);
+- `:cp` - Clopper-Pearson exact CI (Clopper&Pearson, 1934);
+- `:blaker` - Blaker exact CI for discrete distributions (Blaker, 2000);
+- `:soc` - SOC: Second-Order corrected CI;
+- `:arc` - Arcsine CI;
+- `:wald` - Wald CI without CC;
+- `:waldcc` - Wald CI with CC (1/2/n);
+- `:ac` - Agresti-Coull;
+- `:jeffrey` - Jeffreys interval (Brown et al,2001).
+
+Reference:
+
+* Wilson, E.B. (1927) Probable inference, the law of succession, and statistical inference J. Amer.Stat. Assoc 22, 209–212;
+* Clopper, C. and Pearson, E.S. (1934) The use of confidence or fiducial limits illustrated in the caseof the binomial.Biometrika26, 404–413;
+* Agresti A. and Coull B.A. (1998) Approximate is better than "exact" for interval estimation of binomial proportions. American Statistician, 52, pp. 119-126.
+* Newcombe, R. G. (1998) Two-sided confidence intervals for the single proportion: comparison of seven methods, Statistics in Medicine, 17:857-872 https://pubmed.ncbi.nlm.nih.gov/16206245/
+* Blaker, H. (2000). Confidence curves and improved exact confidence intervals for discrete distributions, Canadian Journal of Statistics 28 (4), 783–798;
+* Pires, Ana & Amado, Conceição. (2008). Interval Estimators for a Binomial Proportion: Comparison of Twenty Methods. REVSTAT. 6. 10.57805/revstat.v6i2.63. 
+
+"""
+function propci(x::Int, n::Int; level = 0.95, method = :default)
+    #=
+    TODO: modified wilson, modified jeffreys, witting, pratt, midp, lik
+    =#
+    if  x > n throw(ArgumentError("x > n")) end
+    alpha    = 1 - level
+    if method == :wilson || method == :default
+        fx = ci_prop_wilson
+    elseif method==:wilsoncc
+        fx = ci_prop_wilson_cc
+    elseif method==:cp
+        fx = ci_prop_cp
+    elseif method==:blaker
+        fx = ci_prop_blaker
+    elseif method==:soc
+        fx = ci_prop_soc
+    elseif method==:arc
+        fx = ci_prop_arc
+    elseif method==:wald
+        fx = ci_prop_wald
+    elseif method==:waldcc
+        fx = ci_prop_wald_cc
+    elseif method==:ac
+        fx = ci_prop_ac
+    elseif method==:jeffrey
+        fx = ci_prop_jeffrey
+    else
+        throw(ArgumentError("unknown ci method=$(method), possible is: :wilson, :wilsoncc, :cp, :blaker, :soc, :arc, :wald, :waldcc, :ac, :jeffrey"))
+    end
+    fx(x, n, alpha)
+end
+"""
+    propci(contab::ConTab; level = 0.95, method = :default)
+"""
+function propci(contab::ConTab; level = 0.95, method = :default)
+    if  size(contab.tab, 2) != 2 throw(ArgumentError("CI only for N X 2 tables.")) end
+    if size(contab, 1) > 1
+        v = Vector{Tuple{Float64, Float64}}(undef, size(contab, 1))
+        for i = 1:size(contab, 1)
+            x = contab.tab[i, 1]
+            n = x + contab.tab[i, 2]
+            #println(x, " : ", n)
+            v[i] = propci(x, n; level = level, method = method)
+        end
+        return v
+    else
+        x = contab.tab[1, 1]
+        n = x + contab.tab[1, 2]
+        return propci(x, n; level = level, method = method)
+    end
+end
+
+"""
+    propci(prop::Proportion; level = 0.95, method = :default)
+"""
+function propci(prop::Proportion; level = 0.95, method = :default)
+    propci(prop.x, prop.n; level = level, method = method)
+end
 
 """
     diffci(x1, n1, x2, n2; level = 0.95, method = :default)
@@ -186,85 +276,6 @@ function rrci(contab::ConTab; level = 0.95, method = :default)
 end
 
 """
-    propci(x::Int, n::Int; level = 0.95, method = :default)
-
-`method`:
-
-- `:wilson` | `:default` - Wilson's confidence interval (CI) for a single proportion (wilson score) (Wilson, 1927);
-- `:wilsoncc` - Wilson's CI with continuity correction (CC);
-- `:cp` - Clopper-Pearson exact CI (Clopper&Pearson, 1934);
-- `:blaker` - Blaker exact CI for discrete distributions (Blaker, 2000);
-- `:soc` - SOC: Second-Order corrected CI;
-- `:arc` - Arcsine CI;
-- `:wald` - Wald CI without CC;
-- `:waldcc` - Wald CI with CC;
-- `:ac` - Agresti-Coull;
-- `:jeffrey` - Jeffreys interval.
-
-Reference:
-
-* Wilson, E.B. (1927) Probable inference, the law of succession, and statistical inference J. Amer.Stat. Assoc 22, 209–212;
-* Clopper, C. and Pearson, E.S. (1934) The use of confidence or fiducial limits illustrated in the caseof the binomial.Biometrika26, 404–413;
-* Blaker, H. (2000). Confidence curves and improved exact confidence intervals for discrete distributions, Canadian Journal of Statistics 28 (4), 783–798;
-
-"""
-function propci(x::Int, n::Int; level = 0.95, method = :default)
-    if  x > n throw(ArgumentError("x > n")) end
-    alpha    = 1 - level
-    if method == :wilson || method == :default
-        fx = ci_prop_wilson
-    elseif method==:wilsoncc
-        fx = ci_prop_wilson_cc
-    elseif method==:cp
-        fx = ci_prop_cp
-    elseif method==:blaker
-        fx = ci_prop_blaker
-    elseif method==:soc
-        fx = ci_prop_soc
-    elseif method==:arc
-        fx = ci_prop_arc
-    elseif method==:wald
-        fx = ci_prop_wald
-    elseif method==:waldcc
-        fx = ci_prop_wald_cc
-    elseif method==:ac
-        fx = ci_prop_ac
-    elseif method==:jeffrey
-        fx = ci_prop_jeffrey
-    else
-        throw(ArgumentError("unknown ci method=$(method), possible is: :wilson, :wilsoncc, :cp, :blaker, :soc, :arc, :wald, :waldcc, :ac, :jeffrey"))
-    end
-    fx(x, n, alpha)
-end
-"""
-    propci(contab::ConTab; level = 0.95, method = :default)
-"""
-function propci(contab::ConTab; level = 0.95, method = :default)
-    if  size(contab.tab, 2) != 2 throw(ArgumentError("CI only for N X 2 tables.")) end
-    if size(contab, 1) > 1
-        v = Vector{Tuple{Float64, Float64}}(undef, size(contab, 1))
-        for i = 1:size(contab, 1)
-            x = contab.tab[i, 1]
-            n = x + contab.tab[i, 2]
-            #println(x, " : ", n)
-            v[i] = propci(x, n; level = level, method = method)
-        end
-        return v
-    else
-        x = contab.tab[1, 1]
-        n = x + contab.tab[1, 2]
-        return propci(x, n; level = level, method = method)
-    end
-end
-
-"""
-    propci(prop::Proportion; level = 0.95, method = :default)
-"""
-function propci(prop::Proportion; level = 0.95, method = :default)
-    propci(prop.x, prop.n; level = level, method = method)
-end
-
-"""
     mpropci(contab::ConTab; level = 0.95, method = :default)
 
 Multinomial proportions confidence interval.
@@ -410,7 +421,8 @@ function ci_diff_fm(x1, n1, x2, n2, alpha; atol::Float64 = 1E-8)
     uci = find_zero(fmnd, ucis)
     return  lci, uci
 end
-# Wald
+# Wald 
+# Pires, Ana & Amado, Conceição. (2008). Interval Estimators for a Binomial Proportion: Comparison of Twenty Methods. REVSTAT. 6. 10.57805/revstat.v6i2.63. 
 function ci_diff_wald(x1, n1, x2, n2, alpha)
     p1       = x1 / n1
     p2       = x2 / n2
@@ -420,6 +432,7 @@ function ci_diff_wald(x1, n1, x2, n2, alpha)
     return est - z * se, est + z * se
 end
 # Wald continuity correction
+# Pires, Ana & Amado, Conceição. (2008). Interval Estimators for a Binomial Proportion: Comparison of Twenty Methods. REVSTAT. 6. 10.57805/revstat.v6i2.63. 
 function ci_diff_wald_cc(x1, n1, x2, n2, alpha)
     p1       = x1 / n1
     p2       = x2 / n2
@@ -769,6 +782,7 @@ function ci_prop_wald(x, n, alpha)
     return p-b, p+b
 end
 # Wald CI CC
+
 function ci_prop_wald_cc(x::Int, n::Int, alpha::Real)
     p=x/n
     b = quantile(Normal(), 1-alpha/2)*sqrt(p*(1-p)/n)
@@ -807,3 +821,5 @@ function ci_prop_goodman(v, alpha::T2) where T2
     end
     ci
 end
+
+## Wenzel D, Zapf A. Difference of two dependent sensitivities and specificities: Comparison of various approaches. Biom J. 2013 Sep;55(5):705-18. doi: 10.1002/bimj.201200186. Epub 2013 Jul 5. PMID: 23828661.
