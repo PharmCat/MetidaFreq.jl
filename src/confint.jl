@@ -711,11 +711,14 @@ end
 # Wilson CC
 # Newcombe, R. G. (1998). "Two-sided confidence intervals for the single proportion: comparison of seven methods". Statistics in Medicine. 17 (8): 857–872. doi:10.1002/(SICI)1097-0258(19980430)17:8<857::AID-SIM777>3.0.CO;2-E. PMID 959561
 function ci_prop_wilson_cc(x, n, alpha)
-    z = abs(quantile(Normal(), 1 - alpha / 2))
+    q = abs(quantile(Normal(), 1 - alpha / 2))
     p = x / n
-    l = (2*n*p+z*z-1-z*sqrt(z*z-2-1/n+4*p*(n*(1-p)+1)))/2/(n+z*z)
-    u = (2*n*p+z*z+1+z*sqrt(z*z+2-1/n+4*p*(n*(1-p)-1)))/2/(n+z*z)
-    return min(p, l), max(p, u)
+    q² = q * q
+    a = 2x + q²
+    b = 2 * (n + q²)
+    l = (a - 1 - q * sqrt(q² - 2 - 1 / n + 4x * (1 + (1 - x) / n))) / b
+    u = (a + 1 + q * sqrt(q² + 2 - 1 / n + 4x * (1 - (1 + x) / n))) / b
+    return (max(min(p, l), 0), min(max(p, u), 1))
 end
 #Clopper-Pearson exatct CI
 #Clopper, C. and Pearson, E.S. (1934) The use of confidence or fiducial limits illustrated in the caseof the binomial.Biometrika26, 404–413.

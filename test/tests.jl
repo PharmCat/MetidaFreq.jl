@@ -106,6 +106,12 @@ BinomCI(0,5, method = int)
     @test collect(ci)  ≈ [0.28639471634406627, 0.48294114679105093] atol=1E-6
     ci = MetidaFreq.propci(38, 100; level = 0.95, method = :wilsoncc)
     @test collect(ci)  ≈ [0.28639471634406627, 0.48294114679105093] atol=1E-6
+    ci = MetidaFreq.propci(26, 78; method = :wilsoncc)
+    @test collect(ci)  ≈ [0.2330940074016006, 0.4501518829756797] atol=1E-6
+    ci = MetidaFreq.propci(0, 5; method = :wilsoncc)
+    @test collect(ci)  ≈ [0.0, 0.537056017467524] atol=1E-6
+    ci = MetidaFreq.propci(5, 5; method = :wilsoncc)
+    @test collect(ci)  ≈ [1, 0.46294398253247615] atol=1E-6
 
  #=
  > int = "clopper-pearson"
