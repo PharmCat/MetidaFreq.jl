@@ -308,13 +308,44 @@ end
     ct = MetidaFreq.freq(freqdat, :row)
     @test ct.tab[1,1] == 26
     @test ct.tab[1,2] == 17
-
+    @test size(ct) == (1,2)
 
     ct = MetidaFreq.contab(freqdat, :row, :col)
     @test ct.tab[1,1] == 21
     @test ct.tab[1,2] == 5
     @test ct.tab[2,1] == 8
     @test ct.tab[2,2] == 9
+    @test size(ct) == (2,2)
+
+    cts = MetidaFreq.sumrows(x-> x + 1, ct; coln = "Val")
+    @test cts[1,1] == ct[1,1] + ct[1,2] + 2
+    @test cts[2,1] == ct[2,1] + ct[2,2] + 2 
+
+    ctac = MetidaFreq.addcol(ct, [34, 56]; coln = "NewCol")
+    @test ctac[1,3] == 34
+    @test ctac[2,3] == 56
+
+    ctac = MetidaFreq.addcol(sum, ct; coln = "NewCol")
+    @test ctac[1,3] == ct[1,1] + ct[1,2] 
+    @test ctac[2,3] == ct[2,1] + ct[2,2]
+
+    ctac = MetidaFreq.addcol((x,y) -> sum(x) + y, ct, [3, 6]; coln = "NewCol")
+    @test ctac[1,3] == ct[1,1] + ct[1,2] + 3 
+    @test ctac[2,3] == ct[2,1] + ct[2,2] + 6
+
+    ctds = MetidaFreq.DataSet([deepcopy(ct), MetidaFreq.contab([1 2; 3 4], rownames = ["w", "q"], colnames = ["a", "b"])])
+    ctac = MetidaFreq.colreduce(sum, ctds; coln = nothing)
+    @test ctac[1,1] == 26
+    @test ctac[1,2] == 3
+    @test ctac[2,1] == 17
+    @test ctac[2,2] == 7
+
+    push!(ctds, MetidaFreq.contab([0 0; 0 0], rownames = ["w", "q"], colnames = ["a", "b"]))
+    @test length(ctds) == 3
+    MetidaFreq.dropzeros!(ctds)
+    @test length(ctds) == 2
+
+    MetidaFreq.colreduce(sum, ctds; coln = nothing)
 
     @test_nowarn permutedims(ct)
     @test_nowarn MetidaFreq.contab(ct, [1], 1:2)
