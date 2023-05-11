@@ -66,7 +66,7 @@ BinomCI(0,5, method = int)
     ci = MetidaFreq.propci(38, 100; level = 0.95, method = :waldcc)
     @test collect(ci)  ≈ [0.27986600512143206, 0.48013399487856795] atol=1E-6
     ci = MetidaFreq.propci(0, 5; level = 0.95, method = :waldcc)
-    @test collect(ci)  ≈ [-0.1, 0.1] atol=1E-6 # Shold be fixed?
+    @test collect(ci)  ≈ [0, 0.1] atol=1E-6 # Shold be fixed?
 
     # Wilson
 #=
