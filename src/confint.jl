@@ -60,7 +60,8 @@ function propci(x::Int, n::Int; level = 0.95, method = :default)
     else
         throw(ArgumentError("unknown ci method=$(method), possible is: :wilson, :wilsoncc, :cp, :blaker, :soc, :arc, :wald, :waldcc, :ac, :jeffrey"))
     end
-    fx(x, n, alpha)
+    ci = fx(x, n, alpha)
+    (max(ci[1], 0), min(ci[2], 1))
 end
 """
     propci(contab::ConTab; level = 0.95, method = :default)
