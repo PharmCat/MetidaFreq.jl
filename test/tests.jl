@@ -345,7 +345,7 @@ end
     MetidaFreq.dropzeros!(ctds)
     @test length(ctds) == 2
 
-    MetidaFreq.colreduce(sum, ctds; coln = nothing)
+    @test_nowarn show(io, ctds)
 
     @test_nowarn permutedims(ct)
     @test_nowarn MetidaFreq.contab(ct, [1], 1:2)
