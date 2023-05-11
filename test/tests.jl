@@ -111,7 +111,7 @@ BinomCI(0,5, method = int)
     ci = MetidaFreq.propci(0, 5; method = :wilsoncc)
     @test collect(ci)  ≈ [0.0, 0.537056017467524] atol=1E-6
     ci = MetidaFreq.propci(5, 5; method = :wilsoncc)
-    @test collect(ci)  ≈ [1, 0.46294398253247615] atol=1E-6
+    @test collect(ci)  ≈ [0.46294398253247615, 1] atol=1E-6
 
  #=
  > int = "clopper-pearson"
