@@ -8,6 +8,8 @@ Wilcox, R. R. (2005) Introduction to robust estimation and hypothesis testing. E
 """
     propci(x::Int, n::Int; level = 0.95, method = :default)
 
+Proportion confidence interval.
+
 `method`:
 
 - `:wilson` | `:default` - Wilson's confidence interval (CI) for a single proportion (wilson score) (Wilson, 1927);
@@ -168,6 +170,8 @@ end
 """
     orci(x1, n1, x2, n2; level = 0.95, method = :default)
 
+Odd ratio confidence interval.
+
 - `:mn` - MN Score (Miettinen&Nurminen, 1985);
 - `:fm` | `:mee` - FM (same as MN Score, but not multiplied on `(n1 + n2) * (n1 + n2 - 1)`) (Mee RW, 1984; Farrington&Manning, 1990);
 - `:woolf` - Woolf logit (Woolf, 1955);
@@ -223,6 +227,8 @@ function orci(contab::ConTab; level = 0.95, method = :default)
 end
 """
     rrci(x1, n1, x2, n2; level = 0.95, method = :default)
+
+Risk ratio confidence interval.
 
 - `:mn` - Miettinen-Nurminen Score interval (Miettinen&Nurminen, 1985);
 - `:fm` | `:mee` - FM Score interval (Mee RW, 1984; Farrington&Manning, 1990);
@@ -307,6 +313,8 @@ function mpropci(contab::ConTab; level = 0.95, method = :default)
 end
 """
     oddsci(xa, xb; level = 0.95, method = :default)
+
+Confidence interval for odd where total number n = xa + xb. 
 """
 function oddsci(xa, xb; level = 0.95, method = :default) # !!! NEED CHECK !!!
     alpha    = 1 - level
