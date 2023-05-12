@@ -57,6 +57,13 @@ function contab(ct::ConTab, rr, cr)
 end
 
 """
+    Base.getindex(ct::ConTab, args...) = getindex(ct.tab, args...)
+
+Returns values of Contab by index.
+"""
+Base.getindex(ct::ConTab, args...) = getindex(ct.tab, args...)
+
+"""
     Base.permutedims(ct::ConTab)
 
 ConTab permutedims.
@@ -75,6 +82,8 @@ function sumrows_(f::Function, ct::ConTab)
 end
 """
     sumrows(f::Function, contab::ConTab; coln = "Val")
+
+Aplpy function to each element of row, sum and make new column.
 """
 function sumrows(f::Function, ct::ConTab; coln = "Val")
     mx = sumrows_(f, ct)
@@ -85,6 +94,8 @@ function sumrows(f::Function, ct::ConTab; coln = "Val")
 end
 """
     sumrows(contab::ConTab; coln = "Val")
+
+Aplpy `identity` function to each element of row, sum and make new column.
 """
 function sumrows(ct::ConTab; coln = "Val")
     sumrows(identity, ct; coln = coln)
@@ -92,6 +103,8 @@ end
 
 """
     addcol(ct::ConTab, col::Vector{Int}; coln = "Val")
+
+Add column.
 """
 function addcol(ct::ConTab, col::Vector{Int}; coln = "Val")
     contab(hcat(ct.tab, col);
@@ -102,6 +115,8 @@ end
 
 """
     addcol(f::Function, ct::ConTab; coln = "Val")
+
+Apply function to row and make new column.
 """
 function addcol(f::Function, ct::ConTab; coln = "Val")
     n   = size(ct, 1)
@@ -117,6 +132,8 @@ end
 
 """
     addcol(f::Function, ct::ConTab, col::Vector{Int}; coln = "Val")
+
+Example function (x,y) -> sum(x) + y, where x - row, y - value of col item. 
 """
 function addcol(f::Function, ct::ConTab, col::Vector{Int}; coln = "Val")
     n   = size(ct, 1)
@@ -131,6 +148,8 @@ function addcol(f::Function, ct::ConTab, col::Vector{Int}; coln = "Val")
 end
 """
     colreduce(f::Function, data::DataSet{<:ConTab}; coln = nothing)
+
+Sum rows for each table, than make new table where in each column pleced sums.
 """
 function colreduce(f::Function, data::DataSet{<:ConTab}; coln = nothing)
     fst = data.ds[1].rown
@@ -359,7 +378,10 @@ end
 function Base.show(io::IO, contab::ConTab)
     println(io, "  Contingency table:")
     tab  = hcat(contab.tab, sum(contab.tab, dims = 2))
-    coln = push!(copy(contab.coln), "Total")
+    coln = Vector{String}(undef, length(contab.coln) + 1)
+    copyto!(view(coln, 1:length(contab.coln)), contab.coln)
+    coln[end] = "Total"
+    #coln = push!(copy(contab.coln), "Total")
     PrettyTables.pretty_table(io, tab; header = coln, row_labels = contab.rown, tf = PrettyTables.tf_compact)
     if !isnothing(contab.id) && length(contab.id) > 0
         print(io, "  ID: ")

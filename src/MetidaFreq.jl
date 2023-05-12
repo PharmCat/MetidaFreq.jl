@@ -13,7 +13,7 @@ import HypothesisTests, MetidaBase
 import StatsBase: confint
 import MetidaBase: AbstractData, AbstractIdData, DataSet, Proportion, PrettyTables, metida_table_, getid, map, getdata
 import HypothesisTests: ChisqTest, MultinomialLRTest, FisherExactTest
-import Base: ht_keyindex, size, show, permutedims
+import Base: ht_keyindex, size, show, permutedims, getindex
 
 export contab, propci, diffci, orci, rrci, confint, colorder, sumrows, addcol, colreduce
 

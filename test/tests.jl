@@ -6,39 +6,126 @@ path     = dirname(@__FILE__)
 io       = IOBuffer();
 
 
+function test_ci_approx(x, y)
+        all(map(isapprox, x, y))
+end
+
+
+# library(DescTools) for R using to get reference values
+#=
+int = "clopper-pearson"
+BinomCI(26,78, method = int)
+BinomCI(38,100, method = int)
+BinomCI(0,5, method = int)
+=#
+
 #dat.li2007
 #dat.hine1989
 #dat.graves2010
 #dat.bourassa1996
-
+#https://www.lexjansen.com/wuss/2016/127_Final_Paper_PDF.pdf
 
 @testset "  Proportion Confidence Intarvals                          " begin
     ct = MetidaFreq.contab([38, 62])
+    t   = BinomialTest(26, 78)
+    t2  = BinomialTest(0, 5)
 
     # Wald
+#=
+> BinomCI(26,78, method = "wald")
+           est    lwr.ci    upr.ci
+[1,] 0.3333333 0.2287182 0.4379485
+> BinomCI(38,100, method = "wald")
+      est   lwr.ci   upr.ci
+[1,] 0.38 0.284866 0.475134
+> BinomCI(0,5, method = "wald")
+     est lwr.ci upr.ci
+[1,]   0      0      0
+=#
     ci = MetidaFreq.propci(ct; level = 0.95, method = :wald)
     @test collect(ci)  ≈ [0.28486600512143206, 0.47513399487856794] atol=1E-6
     ci = MetidaFreq.propci(38, 100; level = 0.95, method = :wald)
     @test collect(ci)  ≈ [0.28486600512143206, 0.47513399487856794] atol=1E-6
+    @test test_ci_approx(confint(t,  method=:wald), MetidaFreq.propci(26, 78; method = :wald))
+    @test test_ci_approx(confint(t2, method=:wald), MetidaFreq.propci(0, 5; method = :wald))
 
     # Wald cc
+    #=
+> BinomCI(26,78, method = "waldcc")
+           est    lwr.ci    upr.ci
+[1,] 0.3333333 0.2223079 0.4443587
+> BinomCI(38,100, method = "waldcc")
+      est   lwr.ci   upr.ci
+[1,] 0.38 0.279866 0.480134
+> BinomCI(0,5, method = "waldcc")
+     est lwr.ci upr.ci
+[1,]   0      0    0.1
+    =#
     ci = MetidaFreq.propci(ct; level = 0.95, method = :waldcc)
     @test collect(ci)  ≈ [0.27986600512143206, 0.48013399487856795] atol=1E-6
     ci = MetidaFreq.propci(38, 100; level = 0.95, method = :waldcc)
     @test collect(ci)  ≈ [0.27986600512143206, 0.48013399487856795] atol=1E-6
+    ci = MetidaFreq.propci(0, 5; level = 0.95, method = :waldcc)
+    @test collect(ci)  ≈ [0, 0.1] atol=1E-6 # Shold be fixed?
 
     # Wilson
+#=
+> int = "wilson"
+> BinomCI(26,78, method = int)
+           est    lwr.ci    upr.ci
+[1,] 0.3333333 0.2387267 0.4435859
+> BinomCI(38,100, method = int)
+      est   lwr.ci    upr.ci
+[1,] 0.38 0.290976 0.4779024
+> BinomCI(0,5, method = int)
+     est lwr.ci    upr.ci
+[1,]   0      0 0.4344825
+> 
+=#    
     ci = MetidaFreq.propci(ct; level = 0.95, method = :wilson)
     @test collect(ci)  ≈ [0.2909759925247873, 0.47790244704488943] atol=1E-6
     ci = MetidaFreq.propci(38, 100; level = 0.95, method = :wilson)
     @test collect(ci)  ≈ [0.2909759925247873, 0.47790244704488943] atol=1E-6
+    @test test_ci_approx(confint(t,  method=:wilson), MetidaFreq.propci(26, 78; method = :wilson))
+    @test test_ci_approx(confint(t2, method=:wilson), MetidaFreq.propci(0, 5; method = :wilson))
 
+#=
+> int = "wilsoncc"
+> BinomCI(26,78, method = int)
+           est   lwr.ci    upr.ci
+[1,] 0.3333333 0.233094 0.4501519
+> BinomCI(38,100, method = int)
+      est    lwr.ci    upr.ci
+[1,] 0.38 0.2863947 0.4829411
+> BinomCI(0,5, method = int)
+     est lwr.ci   upr.ci
+[1,]   0      0 0.537056
+=#
     # Wilson cc - check
     ci = MetidaFreq.propci(ct; level = 0.95, method = :wilsoncc)
     @test collect(ci)  ≈ [0.28639471634406627, 0.48294114679105093] atol=1E-6
     ci = MetidaFreq.propci(38, 100; level = 0.95, method = :wilsoncc)
     @test collect(ci)  ≈ [0.28639471634406627, 0.48294114679105093] atol=1E-6
+    ci = MetidaFreq.propci(26, 78; method = :wilsoncc)
+    @test collect(ci)  ≈ [0.2330940074016006, 0.4501518829756797] atol=1E-6
+    ci = MetidaFreq.propci(0, 5; method = :wilsoncc)
+    @test collect(ci)  ≈ [0.0, 0.537056017467524] atol=1E-6
+    ci = MetidaFreq.propci(5, 5; method = :wilsoncc)
+    @test collect(ci)  ≈ [0.46294398253247615, 1] atol=1E-6
 
+ #=
+ > int = "clopper-pearson"
+> BinomCI(26,78, method = int)
+           est    lwr.ci    upr.ci
+[1,] 0.3333333 0.2305852 0.4491667
+> BinomCI(38,100, method = int)
+      est    lwr.ci    upr.ci
+[1,] 0.38 0.2847675 0.4825393
+> BinomCI(0,5, method = int)
+     est lwr.ci    upr.ci
+[1,]   0      0 0.5218238
+> 
+ =#   
     # Clopper-Pirson
     ci = MetidaFreq.propci(ct; level = 0.95, method = :cp)
     @test collect(ci)  ≈ [0.2847674761414794, 0.48253930575080645] atol=1E-6
@@ -221,13 +308,44 @@ end
     ct = MetidaFreq.freq(freqdat, :row)
     @test ct.tab[1,1] == 26
     @test ct.tab[1,2] == 17
-
+    @test size(ct) == (1,2)
 
     ct = MetidaFreq.contab(freqdat, :row, :col)
     @test ct.tab[1,1] == 21
     @test ct.tab[1,2] == 5
     @test ct.tab[2,1] == 8
     @test ct.tab[2,2] == 9
+    @test size(ct) == (2,2)
+
+    cts = MetidaFreq.sumrows(x-> x + 1, ct; coln = "Val")
+    @test cts[1,1] == ct[1,1] + ct[1,2] + 2
+    @test cts[2,1] == ct[2,1] + ct[2,2] + 2 
+
+    ctac = MetidaFreq.addcol(ct, [34, 56]; coln = "NewCol")
+    @test ctac[1,3] == 34
+    @test ctac[2,3] == 56
+
+    ctac = MetidaFreq.addcol(sum, ct; coln = "NewCol")
+    @test ctac[1,3] == ct[1,1] + ct[1,2] 
+    @test ctac[2,3] == ct[2,1] + ct[2,2]
+
+    ctac = MetidaFreq.addcol((x,y) -> sum(x) + y, ct, [3, 6]; coln = "NewCol")
+    @test ctac[1,3] == ct[1,1] + ct[1,2] + 3 
+    @test ctac[2,3] == ct[2,1] + ct[2,2] + 6
+
+    ctds = MetidaFreq.DataSet([deepcopy(ct), MetidaFreq.contab([1 2; 3 4], rownames = ["w", "q"], colnames = ["a", "b"])])
+    ctac = MetidaFreq.colreduce(sum, ctds; coln = nothing)
+    @test ctac[1,1] == 26
+    @test ctac[1,2] == 3
+    @test ctac[2,1] == 17
+    @test ctac[2,2] == 7
+
+    push!(ctds, MetidaFreq.contab([0 0; 0 0], rownames = ["w", "q"], colnames = ["a", "b"]))
+    @test length(ctds) == 3
+    MetidaFreq.dropzeros!(ctds)
+    @test length(ctds) == 2
+
+    @test_nowarn show(io, ctds)
 
     @test_nowarn permutedims(ct)
     @test_nowarn MetidaFreq.contab(ct, [1], 1:2)

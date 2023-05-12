@@ -342,17 +342,6 @@ function Base.show(io::IO, mp::MetaProp)
     println(io, "  Metric vector: $(mp.y)")
     print(io,   "  Metric variance: $(mp.var)")
 end
-struct MetaPropResult{Symbol}
-    data::MetaProp
-    wts::Vector{Float64}
-    est::Float64
-    var::Float64
-    chisq::Float64
-    hetq::Float64
-    heti::Float64
-    hettau::Float64
-end
-
 
 function weights(mpr::MetaPropResult)
     mpr.wts ./ (sum(mpr.wts) / 100)

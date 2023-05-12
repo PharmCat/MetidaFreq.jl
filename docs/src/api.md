@@ -30,6 +30,11 @@ MetidaFreq.colorder
 MetidaFreq.colreduce
 ```
 
+### MetidaFreq.dropzeros!
+```@docs
+MetidaFreq.dropzeros!
+```
+
 ### Base.permutedims
 ```@docs
 MetidaFreq.permutedims
