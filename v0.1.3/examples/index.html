@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Examples · MetidaFreq.jl</title><script data-outdated-warner src="../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.045/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.24/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../">MetidaFreq.jl</a></span></div><form class="docs-search" action="../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../">Home</a></li><li><a class="tocitem" href="../contab/">Contingency tables</a></li><li><a class="tocitem" href="../ci/">Confidence intervals</a></li><li><a class="tocitem" href="../ht/">HypothesisTests</a></li><li><a class="tocitem" href="../meta/">Meta-analysis</a></li><li class="is-active"><a class="tocitem" href>Examples</a><ul class="internal"><li><a class="tocitem" href="#Simple-contingency-table"><span>Simple contingency table</span></a></li><li><a class="tocitem" href="#Confidence-Intervals"><span>Confidence Intervals</span></a></li><li><a class="tocitem" href="#Sorting-example"><span>Sorting example</span></a></li><li><a class="tocitem" href="#Meta-analysis"><span>Meta-analysis</span></a></li></ul></li><li><a class="tocitem" href="../details/">Details</a></li><li><a class="tocitem" href="../api/">API</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Examples</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Examples</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/PharmCat/MetidaFreq.jl/blob/main/docs/src/examples.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Examples"><a class="docs-heading-anchor" href="#Examples">Examples</a><a id="Examples-1"></a><a class="docs-heading-anchor-permalink" href="#Examples" title="Permalink"></a></h1><h2 id="Simple-contingency-table"><a class="docs-heading-anchor" href="#Simple-contingency-table">Simple contingency table</a><a id="Simple-contingency-table-1"></a><a class="docs-heading-anchor-permalink" href="#Simple-contingency-table" title="Permalink"></a></h2><pre><code class="language-julia hljs">using MetidaFreq, CSV, DataFrames;
+
+df = CSV.File(joinpath(dirname(pathof(MetidaFreq)), &quot;..&quot;, &quot;test&quot;, &quot;csv&quot;,  &quot;ft.csv&quot;)) |&gt; DataFrame
+
+ct = MetidaFreq.contab(df, :row, :col)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">  Contingency table:
+ --- ---- ---- -------
+       b    a   Total
+ --- ---- ---- -------
+  c   20   24      44
+  d   83   44     127
+ --- ---- ---- -------
+</code></pre><h2 id="Confidence-Intervals"><a class="docs-heading-anchor" href="#Confidence-Intervals">Confidence Intervals</a><a id="Confidence-Intervals-1"></a><a class="docs-heading-anchor-permalink" href="#Confidence-Intervals" title="Permalink"></a></h2><pre><code class="language-julia hljs">MetidaFreq.propci(ct, method = :cp)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">2-element Vector{Tuple{Float64, Float64}}:
+ (0.3039071135156737, 0.6115278775270854)
+ (0.5640069557739404, 0.7357376131143176)</code></pre><pre><code class="language-julia hljs">MetidaFreq.diffci(ct)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">(-0.36019484734063234, -0.029845370337608354)</code></pre><pre><code class="language-julia hljs">MetidaFreq.orci(ct)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">(0.2208465177513969, 0.8835988210482012)</code></pre><pre><code class="language-julia hljs">MetidaFreq.rrci(ct)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">(0.47558217064492814, 0.951044895777462)</code></pre><h2 id="Sorting-example"><a class="docs-heading-anchor" href="#Sorting-example">Sorting example</a><a id="Sorting-example-1"></a><a class="docs-heading-anchor-permalink" href="#Sorting-example" title="Permalink"></a></h2><pre><code class="language-julia hljs">ct = MetidaFreq.contab(df, :row, :col; sort = :s1)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">  Contingency table:
+ --- ---- ---- -------
+       b    a   Total
+ --- ---- ---- -------
+  c    0    2       2
+  d   65   34      99
+ --- ---- ---- -------
+  ID: s1 =&gt; f; 
+  Contingency table:
+ --- ---- ---- -------
+       b    a   Total
+ --- ---- ---- -------
+  c   20   22      42
+  d   18   10      28
+ --- ---- ---- -------
+  ID: s1 =&gt; e; 
+</code></pre><pre><code class="language-julia hljs">ct = MetidaFreq.contab(df, :row, :col; sort = [:s1, :s2])</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">  Contingency table:
+ --- --- ---- -------
+      b    a   Total
+ --- --- ---- -------
+  c   0    0       0
+  d   3   10      13
+ --- --- ---- -------
+  ID: s1 =&gt; f; s2 =&gt; g; 
+  Contingency table:
+ --- ---- ---- -------
+       b    a   Total
+ --- ---- ---- -------
+  c   14   10      24
+  d    0    0       0
+ --- ---- ---- -------
+  ID: s1 =&gt; e; s2 =&gt; g; 
+  Contingency table:
+ --- ---- ---- -------
+       b    a   Total
+ --- ---- ---- -------
+  c    0    0       0
+  d   41   20      61
+ --- ---- ---- -------
+  ID: s1 =&gt; f; s2 =&gt; h; 
+  Contingency table:
+ --- --- --- -------
+      b   a   Total
+ --- --- --- -------
+  c   0   0       0
+  d   0   0       0
+ --- --- --- -------
+  ID: s1 =&gt; e; s2 =&gt; h; 
+  Contingency table:
+ --- ---- --- -------
+       b   a   Total
+ --- ---- --- -------
+  c    0   2       2
+  d   21   4      25
+ --- ---- --- -------
+  ID: s1 =&gt; f; s2 =&gt; i; 
+  Contingency table:
+ --- ---- ---- -------
+       b    a   Total
+ --- ---- ---- -------
+  c    6   12      18
+  d   18   10      28
+ --- ---- ---- -------
+  ID: s1 =&gt; e; s2 =&gt; i; 
+</code></pre><pre><code class="language-julia hljs">MetidaFreq.dropzeros!(ct)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">  Contingency table:
+ --- --- ---- -------
+      b    a   Total
+ --- --- ---- -------
+  c   0    0       0
+  d   3   10      13
+ --- --- ---- -------
+  ID: s1 =&gt; f; s2 =&gt; g; 
+  Contingency table:
+ --- ---- ---- -------
+       b    a   Total
+ --- ---- ---- -------
+  c   14   10      24
+  d    0    0       0
+ --- ---- ---- -------
+  ID: s1 =&gt; e; s2 =&gt; g; 
+  Contingency table:
+ --- ---- ---- -------
+       b    a   Total
+ --- ---- ---- -------
+  c    0    0       0
+  d   41   20      61
+ --- ---- ---- -------
+  ID: s1 =&gt; f; s2 =&gt; h; 
+  Contingency table:
+ --- ---- --- -------
+       b   a   Total
+ --- ---- --- -------
+  c    0   2       2
+  d   21   4      25
+ --- ---- --- -------
+  ID: s1 =&gt; f; s2 =&gt; i; 
+  Contingency table:
+ --- ---- ---- -------
+       b    a   Total
+ --- ---- ---- -------
+  c    6   12      18
+  d   18   10      28
+ --- ---- ---- -------
+  ID: s1 =&gt; e; s2 =&gt; i; 
+</code></pre><pre><code class="language-julia hljs">MetidaFreq.dropzeros!(ct)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">  Contingency table:
+ --- --- ---- -------
+      b    a   Total
+ --- --- ---- -------
+  c   0    0       0
+  d   3   10      13
+ --- --- ---- -------
+  ID: s1 =&gt; f; s2 =&gt; g; 
+  Contingency table:
+ --- ---- ---- -------
+       b    a   Total
+ --- ---- ---- -------
+  c   14   10      24
+  d    0    0       0
+ --- ---- ---- -------
+  ID: s1 =&gt; e; s2 =&gt; g; 
+  Contingency table:
+ --- ---- ---- -------
+       b    a   Total
+ --- ---- ---- -------
+  c    0    0       0
+  d   41   20      61
+ --- ---- ---- -------
+  ID: s1 =&gt; f; s2 =&gt; h; 
+  Contingency table:
+ --- ---- --- -------
+       b   a   Total
+ --- ---- --- -------
+  c    0   2       2
+  d   21   4      25
+ --- ---- --- -------
+  ID: s1 =&gt; f; s2 =&gt; i; 
+  Contingency table:
+ --- ---- ---- -------
+       b    a   Total
+ --- ---- ---- -------
+  c    6   12      18
+  d   18   10      28
+ --- ---- ---- -------
+  ID: s1 =&gt; e; s2 =&gt; i; 
+</code></pre><h2 id="Meta-analysis"><a class="docs-heading-anchor" href="#Meta-analysis">Meta-analysis</a><a id="Meta-analysis-1"></a><a class="docs-heading-anchor-permalink" href="#Meta-analysis" title="Permalink"></a></h2><pre><code class="language-julia hljs">pf1 = MetidaFreq.contab([15 8; 5 14])
+pf2 = MetidaFreq.contab([45 72; 23 95])
+mds = MetidaFreq.DataSet([pf1, pf2])</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">  Contingency table:
+ --- ---- ---- -------
+                Total
+ --- ---- ---- -------
+      15    8      23
+       5   14      19
+ --- ---- ---- -------
+
+  Contingency table:
+ --- ---- ---- -------
+                Total
+ --- ---- ---- -------
+      45   72     117
+      23   95     118
+ --- ---- ---- -------
+
+</code></pre><pre><code class="language-julia hljs">mp = MetidaFreq.metaprop(mds, :rr)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">  Meta-proportion:
+  Tables: 2
+  Metric: rr
+  Metric vector: [0.9075570519054006, 0.6796789635090787]
+  Metric variance: [0.17055682684973306, 0.04867889827359245]</code></pre><pre><code class="language-julia hljs">mpf = MetidaFreq.metapropfixed(mp; weights = :mh)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">  Meta-proportion fixed-effect result:
+  Weights (%): [19.297, 80.703]
+  Estimate: 0.727886
+  Variance (Std. error): 0.0378135 (0.194457)
+  Exp(Estimate): 2.0707
+  Chi²: 14.3193
+  Q: 0.237012</code></pre><pre><code class="language-julia hljs">mpf = MetidaFreq.metaproprandom(mp; tau = :dl)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">  Meta-proportion random-effect result:
+  Weights (%): [22.204, 77.796]
+  Estimate: 0.730277
+  Variance  (Std. error): 0.0378703 (0.194603)
+  Exp(Estimate): 2.07566
+  Chi²: 14.3193
+  Q: 0.236861
+  I²: 0.0
+  τ²: 0.0</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../meta/">« Meta-analysis</a><a class="docs-footer-nextpage" href="../details/">Details »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.24 on <span class="colophon-date" title="Friday 12 May 2023 00:44">Friday 12 May 2023</span>. Using Julia version 1.8.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
