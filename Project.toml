@@ -1,7 +1,7 @@
 name = "MetidaFreq"
 uuid = "bd16ee1e-1b2f-4f89-b253-604a522f8c5f"
 authors = ["PharmCat <v.s.arnautov@yandex.ru>"]
-version = "0.1.4"
+version = "0.1.5"
 
 [deps]
 
