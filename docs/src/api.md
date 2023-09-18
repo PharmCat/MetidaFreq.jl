@@ -12,7 +12,6 @@ MetidaFreq.contab
 MetidaFreq.freq
 ```
 
-
 ## Contingency tables utilities
 
 ### MetidaFreq.addcol
@@ -94,6 +93,12 @@ MetidaFreq.metapropfixed
 MetidaFreq.metaproprandom
 ```
 
+## Base
+
+### Base.getindex
+```@docs
+getindex
+```
 
 ## HypothesisTests
 
@@ -110,4 +115,11 @@ HypothesisTests.MultinomialLRTest
 ### HypothesisTests.FisherExactTest
 ```@docs
 HypothesisTests.FisherExactTest
+```
+
+## Experimental
+
+### MetidaFreq.oddsci 
+```@docs
+MetidaFreq.oddsci 
 ```
