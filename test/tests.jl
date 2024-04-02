@@ -307,8 +307,17 @@ end
 
     ct = MetidaFreq.freq(freqdat, :row)
     @test ct.tab[1,1] == 26
-    @test ct.tab[1,2] == 17
-    @test size(ct) == (1,2)
+    @test ct.tab[2,1] == 17
+    @test size(ct) == (2,1)
+
+    ct = MetidaFreq.freq(freqdat[!, :row])
+    @test ct.tab[1,1] == 26
+    @test ct.tab[2,1] == 17
+    @test size(ct) == (2,1)
+
+    ctd = MetidaFreq.freqdict(freqdat[!, :row])
+    @test ctd["w"] == 26
+    @test ctd["q"] == 17
 
     ct = MetidaFreq.contab(freqdat, :row, :col)
     @test ct.tab[1,1] == 21
