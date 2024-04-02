@@ -12,6 +12,11 @@ MetidaFreq.contab
 MetidaFreq.freq
 ```
 
+### MetidaFreq.freqdict
+```@docs
+MetidaFreq.freqdict
+```
+
 ## Contingency tables utilities
 
 ### MetidaFreq.addcol
