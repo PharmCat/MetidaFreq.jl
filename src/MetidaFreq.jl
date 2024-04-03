@@ -15,7 +15,7 @@ import MetidaBase: AbstractData, AbstractIdData, DataSet, Proportion, PrettyTabl
 import HypothesisTests: ChisqTest, MultinomialLRTest, FisherExactTest
 import Base: ht_keyindex, size, show, permutedims, getindex
 
-export contab, freq, propci, diffci, orci, rrci, confint, colorder, sumrows, addcol, colreduce
+export contab, freq, freqdict, propci, diffci, orci, rrci, confint, colorder, sumrows, addcol, colreduce
 
 export metaprop, metapropfixed, metaproprandom
 
