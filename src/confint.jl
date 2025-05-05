@@ -352,83 +352,120 @@ end
 ################################################################################
 # Method of Mee 1984 with Miettinen and Nurminen modification n / (n - 1) Newcombe 1998
 # Score intervals for the difference of two binomial proportions
-@inline function mle_diff(p1, n1, p2, n2, δ)
-    if p1 - p2 - δ == 0 return 0.0 end
+function mle_diff(p1, n1, p2, n2, δ)
+    if δ > 1 
+        δ = 1
+    elseif δ < -1
+        δ = -1
+    end
+    if isapprox(p1 - p2 - δ, eps()) return eps() end
     θ = n2 / n1
     a = 1 + θ
     b = -(1 + θ + p1 + θ * p2 + δ * (θ + 2))
-    c = δ^2 + δ * (2p1 + θ + 1) + p1 + θ * p2
+    c = δ*δ + δ * (2p1 + θ + 1) + p1 + θ * p2
     d = -p1 * δ * (1 + δ)
-    v = (b / 3a)^3 - b * c / (6 * a * a) + d / 2a
-    u = sign(v) * sqrt((b / 3a)^2 - c / 3a)
-    w = (pi + acos(v / u^3)) / 3
-    p1n = 2u * cos(w) - b / 3a
+    #bdiv3a = b / (3a)
+    v = ( b / (3a))^3 - b * c / (6 * a * a) + d / (2a)
+    sqrtarg = ( b / (3a))^2 - c / (3a)
+    #if abs(sqrtarg) < eps()
+    #    u = sign(v) * eps()
+    #else
+    #u = 0.0
+    if sqrtarg < 0 return NaN  end
+    #try
+        u = sign(v) * sqrt(sqrtarg)
+    #catch
+    #    println((p1, n1, p2, n2, δ,))
+    #    error()
+    #end
+    #end
+    u³ = u*u*u
+    if isapprox(v, u³) 
+        w = pi / 3
+    else
+        w = (pi + acos(v / u³)) / 3
+    end
+    p1n = 2u * cos(w) - b / (3a)
     p2n = p1n - δ
-    return p1n, p2n
+    return p1n, p2n 
 end
-@inline function mn_fm_diff_z_val(p1, n1, p2, n2, est, δ)
+
+function mn_fm_diff_z_val(p1, n1, p2, n2, est, δ)
+    if isapprox(δ, eps()) return eps() end
     p1n, p2n = mle_diff(p1, n1, p2, n2, δ)
-    return (est - δ)^2 / (p1n * (1 - p1n) / n1 + p2n * (1 - p2n) / n2)
+    var = p1n * (1 - p1n) / n1 + p2n * (1 - p2n) / n2
+    return (est - δ)^2 / var
 end
-@inline function mn_diff_z_val(p1, n1, p2, n2, est, δ)
-    mn_fm_diff_z_val(p1, n1, p2, n2, est, δ) / (n1 + n2) * (n1 + n2 - 1)
+function mn_diff_z_val(p1, n1, p2, n2, est, δ)
+    if isapprox(δ, eps()) return eps() end
+    p1n, p2n = mle_diff(p1, n1, p2, n2, δ)
+    var = (n1 + n2) / (n1 + n2 - 1) * (p1n * (1 - p1n) / n1 + p2n * (1 - p2n) / n2)
+    return (est - δ)^2 / var
 end
 function ci_diff_mn(x1, n1, x2, n2, alpha; atol::Float64 = 1E-8)
-    lcis, ucis = ci_diff_nhs_cc(x1, n1, x2, n2, alpha)
+
+    z²       = quantile(Chisq(1), 1 - alpha)
     p1       = x1 / n1
     p2       = x2 / n2
     est      = p1 - p2
-    z²        = quantile(Chisq(1), 1 - alpha)
+    ncor     = min(sqrt(eps()), atol)/10
+    
     fmnd(x)  = mn_diff_z_val(p1, n1, p2, n2, est, x) - z²
-    #=
-    if fmnd(lcis) * fmnd(est - eps()) < 0.0
-        ll = lcis
-        lu = est - eps()
-    else
-        ll = -1.0 + eps()
-        lu = lcis
+    
+    lcis, ucis = ci_diff_nhs_cc(x1, n1, x2, n2, alpha)
+
+    zpl = ZeroProblem(fmnd, lcis)
+    zpu = ZeroProblem(fmnd, ucis)
+
+    lci = solve(zpl, Roots.Order0(); atol = atol)
+    uci = solve(zpu, Roots.Order0(); atol = atol)
+
+    if isnan(lci) 
+        ll = -1.0 + ncor
+        lu = est - ncor
+        lci = Roots.find_zero(fmnd, (ll,lu), Order0(); atol = atol)
     end
-    if fmnd(ucis) * fmnd(est + eps()) < 0.0
-        ul = est + eps()
-        uu = ucis
-    else
-        ul = ucis
-        uu = 1.0 - eps()
+    if isnan(uci) 
+        ul = est + ncor
+        uu = 1.0 - ncor
+        uci = Roots.find_zero(fmnd, (ul,uu), Order0(); atol = atol)
     end
-    =#
-    lci = find_zero(fmnd, lcis)
-    uci = find_zero(fmnd, ucis)
+
     return lci, uci
 end
 # FM / MEE
 # Mee RW (1984) Confidence bounds for the difference between two probabilities, Biometrics40:1175-1176
 # MN - no correction
 function ci_diff_fm(x1, n1, x2, n2, alpha; atol::Float64 = 1E-8)
-    lcis, ucis = ci_diff_nhs_cc(x1, n1, x2, n2, alpha)
+    
+    z²       = quantile(Chisq(1), 1 - alpha)
     p1       = x1 / n1
     p2       = x2 / n2
     est      = p1 - p2
-    z²        = quantile(Chisq(1), 1 - alpha)
+    ncor     = min(sqrt(eps()), atol)/10
+
     fmnd(x)  = mn_fm_diff_z_val(p1, n1, p2, n2, est, x) - z²
-    #=
-    if fmnd(lcis) * fmnd(est - eps()) < 0.0
-        ll = lcis
-        lu = est - eps()
-    else
-        ll = -1.0 + eps()
-        lu = lcis
+
+    lcis, ucis = ci_diff_nhs_cc(x1, n1, x2, n2, alpha)
+    
+    zpl = ZeroProblem(fmnd, lcis)
+    zpu = ZeroProblem(fmnd, ucis)
+
+    lci = solve(zpl, Roots.Order0(); atol = atol)
+    uci = solve(zpu, Roots.Order0(); atol = atol)
+
+    if isnan(lci) 
+       ll = -1.0 + ncor
+       lu = est - ncor
+       lci = Roots.find_zero(fmnd, (ll,lu), Order0(); atol = atol)
     end
-    if fmnd(ucis) * fmnd(est + eps()) < 0.0
-        ul = est + eps()
-        uu = ucis
-    else
-        ul = ucis
-        uu = 1.0 - eps()
+    if isnan(uci) 
+       ul = est + ncor
+       uu = 1.0 - ncor
+       uci = Roots.find_zero(fmnd, (ul,uu), Order0(); atol = atol)
     end
-    =#
-    lci = find_zero(fmnd, lcis)
-    uci = find_zero(fmnd, ucis)
-    return  lci, uci
+
+    return lci, uci
 end
 # Wald 
 # Pires, Ana & Amado, Conceição. (2008). Interval Estimators for a Binomial Proportion: Comparison of Twenty Methods. REVSTAT. 6. 10.57805/revstat.v6i2.63. 
@@ -460,7 +497,13 @@ function ci_diff_nhs(x1, n1, x2, n2, alpha)
     z        = quantile(Normal(), 1 - alpha / 2)
     lci1, uci1 = ci_prop_wilson(x1, n1, alpha)
     lci2, uci2 = ci_prop_wilson(x2, n2, alpha)
-    return  est - z * sqrt(lci1 * (1 - lci1)/n1 + uci2 * (1 - uci2) / n2), est + z * sqrt(uci1 * (1 - uci1) / n1 + lci2 * (1 - lci2) / n2)
+    
+    varlci = lci1 * (1 - lci1)/n1 + uci2 * (1 - uci2) / n2
+    if abs(varlci) < eps() varlci = eps() end # numerical instability fix
+    varuci = uci1 * (1 - uci1) / n1 + lci2 * (1 - lci2) / n2
+    if abs(varuci) < eps() varuci = eps() end # numerical instability fix
+
+    return  est - z * sqrt(varlci), est + z * sqrt(varuci)
 end
 # Newcombes Hybrid Score continuity correction
 function ci_diff_nhs_cc(x1, n1, x2, n2, alpha)
